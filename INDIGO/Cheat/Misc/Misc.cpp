@@ -5,6 +5,8 @@
 */
 
 #include "Misc.h"
+#include "../../SDK/SDK.h"
+#include "../../Engine/Engine.h" //cba
 
 using namespace Client;
 //[junk_enable /]
@@ -147,10 +149,10 @@ void CMisc::OnCreateMove( CUserCmd* pCmd )
 	}
 }
 
-//broken
+//broken/unnneeded - NOODLED DID IT / WANTS IT GONE
 void CMisc::FrameStageNotify(ClientFrameStage_t Stage)
-{
-	/*if (Interfaces::Engine()->IsInGame() && Stage == ClientFrameStage_t::FRAME_RENDER_START)
+{ /*
+	if (Interfaces::Engine()->IsInGame() && Stage == ClientFrameStage_t::FRAME_RENDER_START)
 	{
 		CBaseEntity* localplayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntity(Interfaces::Engine()->GetLocalPlayer());
 		if (!localplayer)
@@ -240,10 +242,65 @@ void CMisc::OnPlaySound(const char* pszSoundName) {
 	}
 }
 
-void CMisc::OnOverrideView( CViewSetup * pSetup )
-{
-	if ( Settings::Misc::misc_FovChanger && !Interfaces::Engine()->IsTakingScreenshot() )
-	{
+void CMisc::OnOverrideView( CViewSetup * pSetup ) {
+
+	CBaseEntity* pPlayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntity(Interfaces::Engine()->GetLocalPlayer());
+	
+	if (!pPlayer)
+		return;
+
+	//thirdperson - thx spirthack/csgosimple! :D
+	if (Settings::Misc::misc_ThirdPerson && !pPlayer->IsDead()) {
+
+		if (!g_pInput->m_fCameraInThirdPerson) {
+			g_pInput->m_fCameraInThirdPerson = true;
+		}
+
+		float dist = Settings::Misc::misc_ThirdPersonRange;
+
+		QAngle *view = pPlayer->GetVAngles();
+		trace_t tr;
+		Ray_t ray;
+
+		Vector desiredCamOffset = Vector(cos((view->y)) * dist,
+			sin(DEG2RAD2(view->y)) * dist,
+			sin(DEG2RAD2(-view->x)) * dist
+		);
+
+		//cast a ray from the Current camera Origin to the Desired 3rd person Camera origin
+		ray.Init(pPlayer->GetEyePosition(), (pPlayer->GetEyePosition() - desiredCamOffset));
+		CTraceFilter traceFilter;
+		traceFilter.pSkip = pPlayer;
+		Interfaces::EngineTrace()->TraceRay(ray, MASK_SHOT, &traceFilter, &tr);
+
+		Vector diff = pPlayer->GetEyePosition() - tr.endpos;
+
+		float distance2D = sqrt(abs(diff.x * diff.x) + abs(diff.y * diff.y));// Pythagorean
+
+		bool horOK = distance2D > (dist - 2.0f);
+		bool vertOK = (abs(diff.z) - abs(desiredCamOffset.z) < 3.0f);
+
+		float cameraDistance;
+
+		if (horOK && vertOK) { // If we are clear of obstacles
+			cameraDistance = dist; // go ahead and set the distance to the setting
+		}
+		else {
+			if (vertOK) { // if the Vertical Axis is OK
+				cameraDistance = distance2D * 0.95f;
+			}
+			else { // otherwise we need to move closer to not go into the floor/ceiling
+				cameraDistance = abs(diff.z) * 0.95f;
+			}
+		}
+		g_pInput->m_fCameraInThirdPerson = true;
+		g_pInput->m_vecCameraOffset.z = cameraDistance;
+	}
+	else {
+		g_pInput->m_fCameraInThirdPerson = false;
+	}
+
+	if (Settings::Misc::misc_FovChanger && !Interfaces::Engine()->IsTakingScreenshot()) {
 		CBaseEntity* pPlayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntity( Interfaces::Engine()->GetLocalPlayer() );
 
 		if (!pPlayer)
@@ -252,15 +309,13 @@ void CMisc::OnOverrideView( CViewSetup * pSetup )
 		if (pPlayer->GetIsScoped())
 			return;
 
-		if ( pPlayer->IsDead() )
-		{
-			if ( pPlayer->GetObserverMode() == ObserverMode_t::OBS_MODE_IN_EYE && pPlayer->GetObserverTarget() )
-				pPlayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntityFromHandle( pPlayer->GetObserverTarget() );
+		if (pPlayer->IsDead()) {
+			if (pPlayer->GetObserverMode() == ObserverMode_t::OBS_MODE_IN_EYE && pPlayer->GetObserverTarget())
+				pPlayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntityFromHandle(pPlayer->GetObserverTarget());
 
-			if ( !pPlayer )
+			if (!pPlayer)
 				return;
 		}
-
 		pSetup->fov = (float)Settings::Misc::misc_FovView;
 	}
 }
@@ -392,6 +447,161 @@ void CMisc::OnRenderSpectatorList()
 					DrawIndex++;
 				}
 			}
+		}
+	}
+}
+
+//thx csgosimple :)
+CMisc::Glow::Glow() {}
+
+CMisc::Glow::~Glow() {
+	// We cannot call shutdown here unfortunately.
+	// Reason is not very straightforward but anyways:
+	// - This destructor will be called when the dll unloads
+	//   but it cannot distinguish between manual unload 
+	//   (pressing the Unload button or calling FreeLibrary)
+	//   or unload due to game exit.
+	//   What that means is that this destructor will be called
+	//   when the game exits.
+	// - When the game is exiting, other dlls might already 
+	//   have been unloaded before us, so it is not safe to 
+	//   access intermodular variables or functions.
+	//   
+	//   Trying to call Shutdown here will crash CSGO when it is
+	//   exiting (because we try to access g_GlowObjManager).
+	//
+}
+
+void CMisc::Glow::Shutdown() {
+	// Remove glow from all entities
+	for (auto i = 0; i < g_GlowObjManager->m_GlowObjectDefinitions.Count(); i++) {
+		auto& glowObject = g_GlowObjManager->m_GlowObjectDefinitions[i];
+		auto entity = reinterpret_cast<CBaseEntity*>(glowObject.m_pEntity);
+
+		if (glowObject.IsUnused()) {
+			continue;
+		}
+
+		if (!entity || entity->IsDormant()) {
+			continue;
+		}
+
+		glowObject.m_flAlpha = 0.0f;
+	}
+}
+
+//original
+/*auto glow_target = [](GlowObjectDefinition_t& glowObject, Color color) -> void {
+				glowObject.m_flRed = color.r() / 255.f;
+				glowObject.m_flGreen = color.g() / 255.f;
+				glowObject.m_flBlue = color.b() / 255.f;
+				glowObject.m_flAlpha = color.a() / 255.f;
+				glowObject.m_bRenderWhenOccluded = true;
+				glowObject.m_bRenderWhenUnoccluded = false;
+			};
+			if (Interfaces::GlowManager && Interfaces::Engine()->IsConnected()) {
+				if (Settings::Esp::glow) {
+					for (auto i = 0; i < Interfaces::GlowManager()->m_GlowObjectDefinitions.Count(); i++) {
+						auto& glowObject = Interfaces::GlowManager()->m_GlowObjectDefinitions[i];
+						auto entity = reinterpret_cast<CBaseEntity*>(glowObject.m_pEntity);
+						if (!entity || glowObject.IsUnused()) {
+							continue;
+						}
+						switch (entity->GetClientClass()->m_ClassID) {
+							case (int)CLIENT_CLASS_ID::CCSPlayer: {
+								if (entity->GetTeam() != Client::g_pPlayers->GetLocal()->m_pEntity->GetTeam()) {
+									glow_target(glowObject, Color(255, 255, 255, 255));
+								}
+							}
+							break;
+							default:
+								break;
+						}
+					}
+				}
+			}*/
+
+void CMisc::Glow::Run() {
+	auto glow_target = [](GlowObjectDefinition_t& glowObject, Color color) -> void {
+		glowObject.m_flRed = color.r() / 255.f;
+		glowObject.m_flGreen = color.g() / 255.f;
+		glowObject.m_flBlue = color.b() / 255.f;
+		glowObject.m_flAlpha = color.a() / 255.f;
+		glowObject.m_bRenderWhenOccluded = true;
+		glowObject.m_bRenderWhenUnoccluded = false;
+	};
+
+	for (auto i = 0; i < g_GlowObjManager->m_GlowObjectDefinitions.Count(); i++) {
+		auto& glowObject = g_GlowObjManager->m_GlowObjectDefinitions[i];
+		auto entity = reinterpret_cast<CBaseEntity*>(glowObject.m_pEntity);
+
+		if (glowObject.IsUnused()) {
+			continue;
+		}
+
+		if (!entity || entity->IsDormant()) {
+			continue;
+		}
+
+		//auto color = Color{};
+
+		switch (entity->GetClientClass()->m_ClassID) {
+		case (int)CLIENT_CLASS_ID::CCSPlayer: {
+			//auto is_enemy = (entity->GetTeam() != Client::g_pPlayers->GetLocal()->m_pEntity->GetTeam());
+			if (entity->GetTeam() != Client::g_pPlayers->GetLocal()->m_pEntity->GetTeam()) {
+				glow_target(glowObject, Color(255, 255, 255, 255));
+			}
+			/*if (entity->HasC4() && is_enemy && g_Options.glow_c4_carrier) {
+				color = g_Options.color_glow_c4_carrier;
+				break;
+			}*/
+
+			/*if (/*!g_Options.glow_players || entity->IsDead())
+				continue;
+
+			/*if (!is_enemy && Settings::Esp::esp_Enemy)
+				continue;*/
+
+			//color = is_enemy ? g_Options.color_glow_enemy : g_Options.color_glow_ally;
+
+			break;
+		} //remove all below this if you want the default asis indigo glow
+		/*case (int)CLIENT_CLASS_ID::CChicken: {
+			if(!g_Options.glow_chickens) { //settings -> glow_chickens
+				continue;
+			}
+			entity->m_bShouldGlow() = true;
+			color = g_Options.color_glow_chickens; //dont have a setting for this
+			break;
+		}
+		case (int)CLIENT_CLASS_ID::CBaseAnimating: {
+			if(!g_Options.glow_defuse_kits) { //im guessing it's talking about defusing?
+				continue;
+			}
+			color = g_Options.color_glow_defuse; //dont have a setting for this
+			break;
+		}
+		case (int)CLIENT_CLASS_ID::CPlantedC4: { //im gonna guess this means -> BOMB PLANTED
+			if (!g_Options.glow_planted_c4) { //glow_planted_c4
+				continue;
+			}
+			color = g_Options.color_glow_planted_c4; //dont have a setting for this
+			break;
+		}
+		/*default: {
+			if (entity->IsWeapon()) {
+				if (!Settings::Esp::esp_Weapon) { //settings -> glow_weapons
+					continue;
+				}
+				color = g_Options.color_glow_weapons; //dont have a setting for this
+			}
+		}
+				 glowObject.m_flRed = color.r() / 255.0f;
+				 glowObject.m_flGreen = color.g() / 255.0f;
+				 glowObject.m_flBlue = color.b() / 255.0f;
+				 glowObject.m_flAlpha = color.a() / 255.0f;
+				 glowObject.m_bRenderWhenOccluded = true;
+				 glowObject.m_bRenderWhenUnoccluded = false;*/
 		}
 	}
 }

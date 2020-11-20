@@ -576,10 +576,11 @@ void CEsp::OnRender() {
 
 			Ambient();
 
+			//NOODLED DID IT
 			//add back if you fix sniper crosshair
-			/*if (Settings::Misc::misc_AwpAim && IsLocalAlive()) {
+			if (Settings::Misc::misc_AwpAim && IsLocalAlive()) {
 				g_pRender->DrawFillBox(iScreenWidth, iScreenHeight, 1, 1, Color::Purple());
-			}*/
+			}//*/
 			for (BYTE PlayerIndex = 0; PlayerIndex < g_pPlayers->GetSize(); PlayerIndex++) {
 				CPlayer* pPlayer = g_pPlayers->GetPlayer(PlayerIndex);
 				if (pPlayer && pPlayer->m_pEntity && pPlayer->bUpdate) {
@@ -1211,12 +1212,12 @@ void CEsp::DrawPlayerEsp( CPlayer* pPlayer )
 		{
 			int iHpAmY = 10;
 			g_pRender->Text((int)vLineOrigin.x, (int)vLineOrigin.y + iHpAmY, true, true, Color::GreenYellow(), ("Flashed"));
-		}/* fix it if you want 
+		}//* fix it if you want //NOODLED DID IT
  		if (pPlayer->m_pEntity->IsReloading())
 		{
 			int iHpAmY = 10;
 			g_pRender->Text((int)vLineOrigin.x, (int)vLineOrigin.y + iHpAmY, true, true, Color::GreenYellow(), ("Reloading"));
-		}*/
+		}//*/
 	}
 
 }

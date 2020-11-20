@@ -376,7 +376,9 @@ DWORD dwEconItemInterfaceWrapper = 0x2DB0 + 0xC;
 typedef float(__thiscall* GetStickerAttributeBySlotIndexFloatFn)(void*, int, EStickerAttributeType, float);
 GetStickerAttributeBySlotIndexFloatFn oGetStickerAttributeBySlotIndexFloat;
 // Below is reserved for future use, if we want to add stickers.
-/*float __fastcall Hooked_GetStickerAttributeBySlotIndexFloat(void* thisptr, void* edx, int iSlot, EStickerAttributeType iAttribute, float flUnknown)
+
+//NOODLED DID IT
+float __fastcall Hooked_GetStickerAttributeBySlotIndexFloat(void* thisptr, void* edx, int iSlot, EStickerAttributeType iAttribute, float flUnknown)
 {
 auto pItem = reinterpret_cast<CBaseAttributableItem*>(uintptr_t(thisptr) - dwEconItemInterfaceWrapper);
 if (!pItem)
@@ -440,7 +442,8 @@ oGetStickerAttributeBySlotIndexInt = (GetStickerAttributeBySlotIndexIntFn)hooked
 hooked_vmt[5] = reinterpret_cast<void*>(&Hooked_GetStickerAttributeBySlotIndexInt);
 }
 vmt = hooked_vmt;
-}*/
+}
+
 
 void Skin_OnFrameStageNotify(ClientFrameStage_t Stage)
 {
@@ -805,7 +808,7 @@ void InitializeKits()
 	//19th october 2020
 	static auto sig_address = CSX::Memory::FindPBYTEPattern("client.dll", (PBYTE)"\xE8\x00\x00\x00\x00\xFF\x76\x0C\x8D\x48\x04\xE8", "x????xxxxxxx", NULL, NULL);
 #if ENABLE_DEBUG_FILE == 1
-	CSX::Log::Add("[FindPattern - InitializeKits = %X]\n", sig_address);
+	CSX::Log::Add("\n[FindPattern - InitializeKits = %X]\n", sig_address);
 #endif
 
 	// Skip the opcode, read rel32 address
@@ -875,6 +878,7 @@ void InitializeKits()
 
 	}
 
+	//sticker kits don't work anyway, - dbg: Invalid EconItemView -- Can't create custom materials for wearable, debug this.
 	// Dump sticker kits
 	{
 		//19th October 2020

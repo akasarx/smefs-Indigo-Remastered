@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine.h"
+#include "Offset.h"
 
 namespace Engine
 {
@@ -18,7 +19,7 @@ namespace Engine
 		bool	IsDead();
 		Vector  GetOrigin();
 		bool	IsVisible(CBaseEntity* pLocalEntity);
-
+		int		CBaseEntity::GetSequenceActivity(int sequence);
 		int     GetMoveType();
 		bool	HasHelmet();
 		bool	HasDefuser();
@@ -41,6 +42,9 @@ namespace Engine
 		ObserverMode_t GetObserverMode();
 		PVOID GetObserverTarget();
 
+		void SetTakeDamage(int num);
+		int GetTakeDamage();
+
 		PVOID			GetActiveWeapon();
 		CBaseWeapon*	GetBaseWeapon();
 		UINT*			GetWeapons();
@@ -48,10 +52,8 @@ namespace Engine
 		CBaseViewModel* GetViewModel();
 
 		Vector * GetVAngles();
-
 		Vector	GetAimPunchAngle();
 		Vector	GetViewPunchAngle();
-
 		Vector	GetVelocity();
 		Vector	GetViewOffset();
 		Vector	GetEyePosition();
@@ -62,11 +64,12 @@ namespace Engine
 		Vector	GetHitboxPosition(int nHitbox);
 
 		studiohdr_t* GetStudioModel();
-
 		mstudiobone_t* GetBone(int nBone);
 		mstudiobbox_t* GetHitBox(int nHitbox);
-
 		mstudiohitboxset_t* GetHitBoxSet();
+
+		Vector& ThirdPersonAngles();
+		bool GetImmunity();
 		//[/swap_lines]
 	};
 

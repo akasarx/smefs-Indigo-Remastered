@@ -7,6 +7,6 @@ namespace Engine
 	namespace Hook
 	{
 		bool Initialize();
-		void Shutdown();
+		int Shutdown();
 	}
 }

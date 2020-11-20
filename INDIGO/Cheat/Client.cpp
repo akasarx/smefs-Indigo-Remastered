@@ -4,6 +4,9 @@
 	Overwatch bans.
 */
 
+/*WORKING:
+INV */
+
 #include "Client.h"
 #include <ctime>
 
@@ -31,12 +34,13 @@ namespace Client
 	CPlayers*	g_pPlayers = nullptr;
 	CRender*	g_pRender = nullptr;
 	CGui*		g_pGui = nullptr;
-
+	CInput*     g_pInput = nullptr;
 	CAimbot*	g_pAimbot = nullptr;
 	CTriggerbot* g_pTriggerbot = nullptr;
 	CEsp*		g_pEsp = nullptr;
 	CRadar*		g_pRadar = nullptr;
 	CKnifebot*	g_pKnifebot = nullptr;
+	ConVar*     g_pConVar = nullptr;
 	CSkin*		g_pSkin = nullptr;
 	CMisc*		g_pMisc = nullptr;
 	CInventoryChanger* g_pInventoryChanger = nullptr;
@@ -167,13 +171,13 @@ namespace Client
 		g_pPlayers = new CPlayers();
 		g_pRender = new CRender(pDevice);
 		g_pGui = new CGui();
-
+		g_pInput = new CInput();
 		g_pAimbot = new CAimbot();
 		g_pTriggerbot = new CTriggerbot();
 		g_pEsp = new CEsp();
 		g_pKnifebot = new CKnifebot();
 		g_pRadar = new CRadar();
-
+		g_pConVar = new ConVar();
 		g_pSkin = new CSkin();
 		g_pMisc = new CMisc();
 		g_pInventoryChanger = new CInventoryChanger();
@@ -235,19 +239,78 @@ namespace Client
 		free(ptr);
 	}
 
-	void Shutdown() {
+	int Shutdown() {
+#if ENABLE_DEBUG_FILE == 1
+		/*
+		//order of init
+		g_pPlayers = new CPlayers();
+		g_pRender = new CRender(pDevice);
+		g_pGui = new CGui();
+		g_pInput = new CInput();
+		g_pAimbot = new CAimbot();
+		g_pTriggerbot = new CTriggerbot();
+		g_pEsp = new CEsp();
+		g_pKnifebot = new CKnifebot();
+		g_pRadar = new CRadar();
+		g_pConVar = new ConVar();
+		g_pSkin = new CSkin();
+		g_pMisc = new CMisc();
+		g_pInventoryChanger = new CInventoryChanger();*/
+
+
+		CSX::Log::Add("[Client - shutting down!]");
+		CSX::Log::Add("[Client - g_pPlayers = %X]", g_pPlayers);
+		CSX::Log::Add("[Client - g_pRender = %X]", g_pRender);
+		CSX::Log::Add("[Client - g_pGui = %X]", g_pGui);
+		CSX::Log::Add("[Client - g_pInput = %X]", g_pInput);
+		CSX::Log::Add("[Client - g_pAimbot = %X]", g_pAimbot);
+		CSX::Log::Add("[Client - g_pTriggerbot = %X]", g_pTriggerbot);
+		CSX::Log::Add("[Client - g_pEsp = %X]", g_pEsp);
+		CSX::Log::Add("[Client - g_pKnifebot = %X]", g_pKnifebot);
+		CSX::Log::Add("[Client - g_pRadar = %X]", g_pRadar);
+		CSX::Log::Add("[Client - g_pConVar = %X]", g_pConVar);
+		CSX::Log::Add("[Client - g_pSkin = %X]", g_pSkin);
+		CSX::Log::Add("[Client - g_pMisc = %X]", g_pMisc);
+		CSX::Log::Add("[Client - g_pInventoryChanger = %X]", g_pInventoryChanger);
+#endif
+		CSX::Log::Add("[Players - shutting down]");
 		DELETE_MOD(g_pPlayers);
+		CSX::Log::Add("[Render - shutting down]");
 		DELETE_MOD(g_pRender);
+		CSX::Log::Add("[GUI - shutting down]");
 		DELETE_MOD(g_pGui);
+		CSX::Log::Add("[Input - shutting down]");
+		DELETE_MOD(g_pInput);
+
+		//these don't need a log
 		DELETE_MOD(g_pAimbot);
-		DELETE_MOD(g_pKnifebot);
 		DELETE_MOD(g_pTriggerbot);
 		DELETE_MOD(g_pEsp);
-		DELETE_MOD(g_pRadar);
 		DELETE_MOD(g_pKnifebot);
+		DELETE_MOD(g_pRadar);
+		DELETE_MOD(g_pConVar);
 		DELETE_MOD(g_pSkin);
 		DELETE_MOD(g_pMisc);
 		DELETE_MOD(g_pInventoryChanger);
+
+		//extra logs :D
+#if ENABLE_DEBUG_FILE == 1
+		CSX::Log::Add("\n[Client - shutdown!]");
+		CSX::Log::Add("[Client - g_pPlayers = %X]", g_pPlayers);
+		CSX::Log::Add("[Client - g_pRender = %X]", g_pRender);
+		CSX::Log::Add("[Client - g_pGui = %X]", g_pGui);
+		CSX::Log::Add("[Client - g_pInput = %X]", g_pInput);
+		CSX::Log::Add("[Client - g_pAimbot = %X]", g_pAimbot);
+		CSX::Log::Add("[Client - g_pTriggerbot = %X]", g_pTriggerbot);
+		CSX::Log::Add("[Client - g_pEsp = %X]", g_pEsp);
+		CSX::Log::Add("[Client - g_pKnifebot = %X]", g_pKnifebot);
+		CSX::Log::Add("[Client - g_pRadar = %X]", g_pRadar);
+		CSX::Log::Add("[Client - g_pConVar = %X]", g_pConVar);
+		CSX::Log::Add("[Client - g_pSkin = %X]", g_pSkin);
+		CSX::Log::Add("[Client - g_pMisc = %X]", g_pMisc);
+		CSX::Log::Add("[Client - g_pInventoryChanger = %X]", g_pInventoryChanger);
+#endif
+		return true;
 	}
 
 	void OnRender()
@@ -406,10 +469,9 @@ namespace Client
 		}
 	}
 
-	void OnFrameStageNotify(ClientFrameStage_t Stage)
-	{
-		if (Interfaces::Engine()->IsInGame() && Interfaces::Engine()->IsConnected())
-		{
+	void OnFrameStageNotify(ClientFrameStage_t Stage) {
+		if (Interfaces::Engine()->IsInGame() && Interfaces::Engine()->IsConnected()) {
+			//no need for this, it's detected anyway, better to just use the hook :)
 			SpoofedConvar* sv_cheats_spoofed = nullptr;
 			if (Settings::Untrusted)
 			{
@@ -425,9 +487,10 @@ namespace Client
 					DELETE_MOD(sv_cheats_spoofed);
 				}
 			}
-			/*if (g_pMisc) //broken lul - thirdperson
-				g_pMisc->FrameStageNotify(Stage);*/
-
+			//NOODLED DID IT
+			if (g_pMisc) { //broken thirdperson lol
+				g_pMisc->FrameStageNotify(Stage);
+			}
 			Skin_OnFrameStageNotify(Stage);
 			Gloves_OnFrameStageNotify(Stage);
 		}
@@ -850,9 +913,11 @@ namespace Client
 
 				ForceFullUpdate();
 			}
-
+			
+			//NOODLED DID IT
 			//fix it if you want sticker changer
-			/*if (ImGui::Checkbox("Sticker Changer", &Settings::Aimbot::weapon_aim_settings[iWeaponID].StickersEnabled)) {
+			//*
+			if (ImGui::Checkbox("Sticker Changer", &Settings::Aimbot::weapon_aim_settings[iWeaponID].StickersEnabled)) {
 				Interfaces::Engine()->ClientCmd_Unrestricted2("record x; stop");
 			}
 
@@ -870,7 +935,7 @@ namespace Client
 
 			if (ImGui::Button(("Apply"), ImVec2(93.f, 20.f))) {
 				Interfaces::Engine()->ClientCmd_Unrestricted2("record x; stop");
-			}*/
+			}//*/
 		}
 
 		if (otherpages == 1)
@@ -928,7 +993,7 @@ namespace Client
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
 				ImGui::ListBoxHeader("Skins");
 				int weapon_index = 0;
-				for (auto weapon : Settings::InvChanger::weapons) {
+				for (auto weapon : Settings::InvChanger::weapons) { //exeception weapon index 1
 					if (ImGui::Selectable(std::string(std::to_string(weapon.itemDefinitionIndex) + " " + std::to_string(weapon.paintKit)).c_str())) {
 						Settings::InvChanger::weapons.erase(Settings::InvChanger::weapons.begin() + weapon_index);
 						Settings::InvChanger::CustomWeaponCount = Settings::InvChanger::weapons.size();
@@ -1047,7 +1112,7 @@ namespace Client
 			ImGui::SameLine(SpaceLineThr);
 			ImGui::Checkbox("Watermarks", &Settings::Esp::esp_Watermark);
 			Settings::Esp::esp_Time = Settings::Esp::esp_Watermark;
-			//ImGui::Checkbox("Glow (BETA)", &Settings::Esp::glow);
+			ImGui::Checkbox("Glow (BETA)", &Settings::Esp::glow); //NOODLED DID IT
 			/// probably won't be fixed cause im lazy
 
 			ImGui::Spacing();
@@ -1328,9 +1393,10 @@ namespace Client
 			ImGui::SameLine(SpaceLineOne);
 			ImGui::Checkbox("Recoil Crosshair", &Settings::Misc::misc_Punch);
 
-			//ImGui::SameLine(SpaceLineTwo);
-			//ImGui::Checkbox("Inventory Unlocker", &Settings::Misc::misc_inventory); // doesn't work
-
+			//NOODLED DID IT /*
+			ImGui::SameLine(SpaceLineTwo);
+			ImGui::Checkbox("Inventory Unlocker", &Settings::Misc::misc_inventory); // doesn't work
+			//*/
 			ImGui::Checkbox("No Flash", &Settings::Misc::misc_NoFlash);
 			ImGui::SameLine(SpaceLineOne);
 			ImGui::Checkbox("No Smoke", &Settings::Misc::misc_NoSmoke);
@@ -1355,8 +1421,10 @@ namespace Client
 				ImGui::Separator();
 			}
 
-			//ImGui::Checkbox("Sniper Crosshair", &Settings::Misc::misc_AwpAim); // doesn't work
-			//ImGui::SameLine(SpaceLineOne);
+			//NOODLED DID IT //*
+			ImGui::Checkbox("Sniper Crosshair", &Settings::Misc::misc_AwpAim); // doesn't work
+			ImGui::SameLine(SpaceLineOne);//*/
+
 			ImGui::Checkbox("Disable Postprocess", &Settings::Misc::misc_Postprocess);
 			ImGui::Separator();
 
@@ -1378,14 +1446,16 @@ namespace Client
 				*(int*)((DWORD)&Name->fnChangeCallback + 0xC) = 0;
 				Name->SetValue(name);
 			}
-			/*ImGui::Separator();
+			//NOODLED DID IT
+			//*
+			ImGui::Separator();
 			static char clantag[128] = { 0 };
 			ImGui::PushItemWidth(362.f);
 			ImGui::InputText("Clan Tag", clantag, 128, Settings::Misc::misc_ClanTagChanger);
 			ImGui::PopItemWidth();
 			if (ImGui::Button("Apply")) {
 				Engine::ClanTagApply(clantag);
-			}*/
+			}//*
 		}
 
 		if (otherpages == 1)
@@ -1394,19 +1464,19 @@ namespace Client
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::Checkbox("Enable Untrusted Features", &Settings::Untrusted);
-			if (ImGui::IsItemHovered())
+			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("sv_cheats 1 (will cause SMAC and possibly trigger vacnet)");
-			if (Settings::Untrusted)
-			{
+			}
+			if (Settings::Untrusted) {
 				ImGui::Checkbox("No Sky", &Settings::Misc::misc_NoSky);
-				
 				//broken
-				/*ImGui::SameLine(SpaceLineOne);
-				//ImGui::Checkbox("Third Person", &Settings::Misc::misc_ThirdPerson);
+				ImGui::SameLine(SpaceLineOne);
+				ImGui::Checkbox("Third Person", &Settings::Misc::misc_ThirdPerson);
 				ImGui::SameLine(SpaceLineTwo);
 				ImGui::PushItemWidth(362.f);
-				if (Settings::Misc::misc_ThirdPerson)
-					ImGui::SliderFloat("##THIRDPERSONRANGE", &Settings::Misc::misc_ThirdPersonRange, 0.f, 500.f, "Range: %0.f");*/
+				if (Settings::Misc::misc_ThirdPerson) {
+					ImGui::SliderFloat("##THIRDPERSONRANGE", &Settings::Misc::misc_ThirdPersonRange, 0.f, 500.f, "Range: %0.f");
+				} //*/
 
 				ImGui::Separator();
 				ImGui::Spacing();

@@ -95,7 +95,8 @@ namespace SDK
 			{
 				OverrideView = 18 ,
 				CreateMove = 24 ,
-				GetViewModelFOV = 35
+				GetViewModelFOV = 35,
+				DoPostScreenSpaceEffects = 44
 			};
 		}
 	}

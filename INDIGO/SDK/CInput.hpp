@@ -87,43 +87,54 @@ namespace SDK
 		CRC32_t   m_crc;
 	};
 
-	//27th July 2019
 	class CInput {
 	public:
-		char pad_0x00[0x8];
-		bool m_fTrackIRAvailable;
-		bool m_fMouseInitialized;
-		bool m_fMouseActive;
-		bool m_fJoystickAdvancedInit;
-		char pad_0x08[0x2C];
-		void* m_pKeys;
-		char pad1[0x10];
-		float m_flKeyboardSampleTime;
-		char pad2[0x58];
-		bool m_fCameraInterceptingMouse;
-		bool m_fCameraInThirdPerson;
-		bool m_fCameraMovingWithMouse;
-		Vector m_vecCameraOffset;
-		bool m_fCameraDistanceMove;
-		int m_nCameraOldX;
-		int m_nCameraOldY;
-		int m_nCameraX;
-		int m_nCameraY;
-		bool m_CameraIsOrthographic;
-		Vector m_angPreviousViewAngles;
-		Vector m_angPreviousViewAnglesTilt;
-		float m_flLastForwardMove; // 0xEC
-		int m_nClearInputState;
-		CUserCmd* m_pCommands; // 0xF4
-		CVerifiedUserCmd* m_pVerifiedCommands;
+		char                pad_0x00[0x0C];
+		bool                m_trackir_available;
+		bool                m_mouse_initiated;
+		bool                m_mouse_active;
+		bool                m_fJoystickAdvancedInit;
+		char                pad_0x08[0x2C];
+		void*               m_pKeys;
+		char                pad_0x38[0x6C];
+		bool                m_fCameraInterceptingMouse;
+		bool                m_fCameraInThirdPerson;
+		bool                m_fCameraMovingWithMouse;
+		Vector		    m_vecCameraOffset;
+		bool                m_fCameraDistanceMove;
+		int                 m_nCameraOldX;
+		int                 m_nCameraOldY;
+		int                 m_nCameraX;
+		int                 m_nCameraY;
+		bool                m_CameraIsOrthographic;
+		Vector              m_angPreviousViewAngles;
+		Vector              m_angPreviousViewAnglesTilt;
+		float               m_flLastForwardMove;
+		int                 m_nClearInputState;
+		char                pad_0xE4[0x8];
+		CUserCmd*           m_pCommands;
+		CVerifiedUserCmd*   m_pVerifiedCommands;
 
-		inline CUserCmd& get_user_cmd(int sequence_number) const {
-			return m_pCommands[sequence_number % MULTIPLAYER_BACKUP];
-		}
-		inline CVerifiedUserCmd& get_verified_user_cmd(int sequence_number) const {
-			return m_pVerifiedCommands[sequence_number % MULTIPLAYER_BACKUP];
-		}
+		inline CUserCmd* GetUserCmd(int sequence_number);
+		inline CUserCmd * GetUserCmd(int nSlot, int sequence_number);
+		inline CVerifiedUserCmd* GetVerifiedCmd(int sequence_number);
 	};
+
+	CUserCmd* CInput::GetUserCmd(int sequence_number) {
+		using OriginalFn = CUserCmd * (__thiscall *)(void *, int, int);
+		return GetMethod<OriginalFn>(this, 8)(this, 0, sequence_number);
+	}
+
+	CUserCmd *CInput::GetUserCmd(int nSlot, int sequence_number) {
+		typedef CUserCmd*(__thiscall *GetUserCmd_t)(void*, int, int);
+		return GetMethod<GetUserCmd_t>(this, 8)(this, nSlot, sequence_number);
+	}
+
+	CVerifiedUserCmd* CInput::GetVerifiedCmd(int sequence_number) {
+		auto verifiedCommands = *(CVerifiedUserCmd **)(reinterpret_cast<uint32_t>(this) + 0xF8);
+		return &verifiedCommands[sequence_number % MULTIPLAYER_BACKUP];
+	}
+
 
 	class IInputSystem
 	{

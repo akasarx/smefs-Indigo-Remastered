@@ -51,12 +51,13 @@ namespace Client
 	extern CPlayers*	g_pPlayers;
 	extern CRender*		g_pRender;
 	extern CGui*		g_pGui;
-
+	extern CInput*      g_pInput;
 	extern CAimbot*		g_pAimbot;
 	extern CTriggerbot* g_pTriggerbot;
 	extern CEsp*		g_pEsp;
 	extern CRadar*		g_pRadar;
 	extern CKnifebot*	g_pKnifebot;
+	extern ConVar*      g_pConVar;
 	extern CSkin*		g_pSkin;
 	extern CMisc*		g_pMisc;
 
@@ -69,7 +70,7 @@ namespace Client
 	extern int			iWeaponSelectIndex;
 
 	bool Initialize( IDirect3DDevice9* pDevice );
-	void Shutdown();
+	int  Shutdown();
 	void SendMMHello();
 	void SendClientHello();
 

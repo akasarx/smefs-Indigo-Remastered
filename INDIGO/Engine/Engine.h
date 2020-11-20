@@ -51,7 +51,7 @@ namespace Engine
 	//[swap_lines]
 	void        ClanTagApply(const char* TagName);
 	bool		Initialize();
-	void		Shutdown();
+	int			Shutdown();
 	WEAPON_TYPE GetWeaponType(int iItemDefinitionIndex);
 	bool		IsLocalAlive();
 	void		ClanTag();

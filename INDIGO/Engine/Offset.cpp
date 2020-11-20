@@ -8,6 +8,7 @@ namespace Engine
 		namespace Entity
 		{
 			//[swap_lines]
+			DWORD m_bGunGameImmunity = 0;
 			DWORD m_hMyWeapons = 0;
 			DWORD m_hMyWearables = 0;
 			DWORD m_hViewModel = 0;
@@ -73,6 +74,7 @@ namespace Engine
 
 		bool Initialize()
 		{
+			Entity::m_bGunGameImmunity = g_NetVar.GetOffset(CS_PLAYER, CS_PLAYER_IMMUNE);
 			Entity::m_hMyWeapons = g_NetVar.GetOffset(BASE_PLAYER, BASE_PLAYER_WEAPONS) / 2;
 			Entity::m_hMyWearables = g_NetVar.GetOffset(BASE_PLAYER, BASE_PLAYER_WERABLES);
 			Entity::m_hViewModel = g_NetVar.GetOffset(BASE_PLAYER, BASE_PLAYER_VIEWMODEL);

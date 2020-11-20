@@ -36,6 +36,9 @@ namespace Engine
 			m_pStateBlockText = nullptr;
 
 		m_pDevice = nullptr;
+#if ENABLE_DEBUG_FILE == 1
+		CSX::Log::Add("[Render - shutdown]\n");
+#endif
 	}
 
 	bool CRender::CreateObject()

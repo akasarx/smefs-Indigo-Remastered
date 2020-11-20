@@ -13,7 +13,7 @@ DWORD WINAPI CheatEntry(LPVOID lpThreadParameter) {
 	HMODULE hModule = HMODULE(lpThreadParameter);
 	if (Engine::Initialize()) {
 #if ENABLE_DEBUG_FILE == 1
-		CSX::Log::Add("[Engine - initialized!]\n");
+		CSX::Log::Add("[Engine - initialized!]");
 #endif
 		return 0;
 	}
@@ -25,8 +25,9 @@ DWORD WINAPI CheatEntry(LPVOID lpThreadParameter) {
 	return 0;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
-	if (fdwReason == DLL_PROCESS_ATTACH) {
+BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+	switch (fdwReason) {
+	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hinstDLL);
 #if ENABLE_DEBUG_CONS == 1
 		AllocConsole();
@@ -38,11 +39,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
 		CSX::Log::LogFile = Client::LogFile;
 		printf("Client::BaseDir = %s\nClient::LogFile = %s\n", Client::BaseDir.c_str(), Client::LogFile.c_str());
 #endif
-		CreateThread(nullptr, 0, LPTHREAD_START_ROUTINE(CheatEntry), hinstDLL, 0, nullptr);
-	}
-	else if (fdwReason == DLL_PROCESS_DETACH) {
-		Engine::Shutdown();
-		FreeLibraryAndExitThread(hinstDLL, true);
+		CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)CheatEntry, hinstDLL, NULL, NULL);
+		break;
+	case DLL_PROCESS_DETACH:
+		if (lpvReserved == nullptr) {
+			return Engine::Shutdown();
+		}
+		FreeLibraryAndExitThread(hinstDLL, true); //Free DLL and exit the thread.
 	}
 	return TRUE;
 }

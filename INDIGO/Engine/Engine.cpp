@@ -14,6 +14,14 @@ namespace Engine {
 		//	return false;
 		//}
 		//#endif
+		 
+		//huh
+		/*
+		ChangeGameUIState: CSGO_GAME_UI_STATE_LOADINGSCREEN -> CSGO_GAME_UI_STATE_INGAME
+ChangeGameUIState: CSGO_GAME_UI_STATE_INGAME -> CSGO_GAME_UI_STATE_INGAME
+CCSGO_BlurTarget - Unable to find panel with the given id "sliding-panel--TERRORIST"! Panel is possibly created dynamically.
+CCSGO_BlurTarget - Unable to find panel with the given id "sliding-panel--CT"! Panel is possibly created dynamically.
+*/
 
 		if (!CSX::Utils::IsModuleLoad(CLIENT_DLL, 45000))
 			return false;
@@ -140,9 +148,23 @@ namespace Engine {
 		}
 		return true;
 	}
-	void Shutdown() {
-		Hook::Shutdown();
-		Client::Shutdown();
+	int Shutdown() {
+		if (!Hook::Shutdown() || !Client::Shutdown()) {
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Engine - failed to shutdown!]");
+#endif
+			return false;
+		}
+		else {
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Engine - shutdown!]");
+			HMODULE prochandle = GetModuleHandle("smef_indigo_compiled.dll");
+			CSX::Log::Add("[Module Handle (NULL) = %X", prochandle);
+			CSX::Log::Add("[Freeing library]");
+			FreeLibrary(prochandle); //exit thread closes csgo so nahh
+#endif
+			return true;
+		}
 	}
 	//[junk_disable /]
 	bool stub_68616b65;

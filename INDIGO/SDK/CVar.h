@@ -1,84 +1,83 @@
 #pragma once
 
-namespace SDK
-{
-		class ConVar
-	{
+namespace SDK {
+	namespace TABLE {
+		namespace convar {
+			enum {
+				getbool = 13
+			};
+		}
+	}
+	class ConVar {
 	public:
 		template<typename... Args>
-		void const ConsoleColorPrintf(const Color& clr, const char* format, Args... args)
-		{
+		void const ConsoleColorPrintf(const Color& clr, const char* format, Args... args) {
 			GetMethod<void(__cdecl*)(void*, const Color&, const char*, ...)>(this, 25)(this, clr, format, args...);
 		}
 
 		template<typename... Args>
-		void const ConsolePrintf(const char* format, Args... args)
-		{
+		void const ConsolePrintf(const char* format, Args... args) {
 			GetMethod<void(__cdecl*)(void*, const char*, ...)>(this, 26)(this, format, args...);
 		}
 
-		Color GetColor()
-		{
+		Color GetColor() {
 			using OriginalFn = Color(__thiscall *)(void *);
 			return GetMethod<OriginalFn>(this, 10)(this);
 		}
 
-		const char* GetString()
-		{
+		const char* GetString() {
 			using OriginalFn = const char *(__thiscall *)(void *);
 			return GetMethod<OriginalFn>(this, 11)(this);
 		}
 
-		float GetFloat()
-		{
+		float GetFloat() {
 			using OriginalFn = float(__thiscall *)(void *);
 			return GetMethod<OriginalFn>(this, 12)(this);
 		}
 
-		int GetInt()
-		{
+		int GetInt() {
 			using OriginalFn = int(__thiscall *)(void *);
 			return GetMethod<OriginalFn>(this, 13)(this);
 		}
 
-		void SetValue(const char *value)
-		{
+		//NOODLED DID IT
+		//for sv_cheats getbool hook :D 
+		bool GetBool() {
+			using OriginalFn = bool(__thiscall*)(void*);
+			return GetMethod<OriginalFn>(this, 13)(this);
+		}
+
+		void SetValue(const char *value) {
 			using OriginalFn = void(__thiscall *)(void *, const char *);
 			GetMethod<OriginalFn>(this, 14)(this, value);
 		}
 
-		void SetValue(float value)
-		{
+		void SetValue(float value) {
 			using OriginalFn = void(__thiscall *)(void *, float);
 			GetMethod<OriginalFn>(this, 15)(this, value);
 		}
 
-		void SetValue(int value)
-		{
+		void SetValue(int value) {
 			using OriginalFn = void(__thiscall *)(void *, int);
 			GetMethod<OriginalFn>(this, 16)(this, value);
 		}
 
-		void SetValue(Color value)
-		{
+		void SetValue(Color value) {
 			using OriginalFn = void(__thiscall *)(void *, Color);
 			GetMethod<OriginalFn>(this, 17)(this, value);
 		}
 
-		ConVar* FindVar(const char *var_name)
-		{
+		ConVar* FindVar(const char *var_name) {
 			typedef ConVar*(__thiscall* OriginalFn)(void*, const char*);
 			return GetMethod<OriginalFn>(this, 15)(this, var_name);
 		}
 
-		void* RegisterConCommand(ConVar *pCommandBase)
-		{
+		void* RegisterConCommand(ConVar *pCommandBase) {
 			typedef ConVar*(__thiscall* OriginalFn)(void*, ConVar*);
 			return GetMethod<OriginalFn>(this, 9)(this, pCommandBase);
 		}
 
-		void* UnregisterConCommand(ConVar *pCommandBase)
-		{
+		void* UnregisterConCommand(ConVar *pCommandBase) {
 			typedef ConVar*(__thiscall* OriginalFn)(void*, ConVar*);
 			return GetMethod<OriginalFn>(this, 10)(this, pCommandBase);
 		}

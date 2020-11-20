@@ -231,10 +231,16 @@ namespace Settings
 		extern bool misc_LegitAA;
 		extern bool misc_LegitAAToggle;
 		extern char misc_NameChanger;
-		//extern char misc_ClanTagChanger; //not used!
+
+		//NOODLED DID IT
+		extern char misc_ClanTagChanger; //not used!
+
 		extern QAngle qLastTickAngle;
-		/*extern bool misc_ThirdPerson;
-		extern float misc_ThirdPersonRange;*/ //broken
+
+		//NOODLED DID IT 
+		extern bool misc_ThirdPerson;
+		extern float misc_ThirdPersonRange; //broken
+
 		extern const char* misc_SkyName;
 		extern float misc_MenuColor[3];
 		extern float misc_TextColor[3];
@@ -253,7 +259,10 @@ namespace Settings
 		extern bool misc_spamregular;
 		extern bool misc_spamrandom;
 		extern bool misc_Punch;
-		//extern bool misc_AwpAim; //broken
+
+		//NOODLED DID IT
+		extern bool misc_AwpAim; //broken
+
 		extern bool misc_NoFlash;	
 		extern bool misc_NoSmoke;
 		extern bool misc_WireHands;
@@ -269,7 +278,9 @@ namespace Settings
 		extern int misc_FovModelView;
 		extern float misc_fakelag_amount;
 		extern bool misc_Moonwalk;
-		//extern bool misc_inventory; //not in client
+
+		//NOODLED DID IT!
+		extern bool misc_inventory; //not in client
 
 		extern bool misc_namespamidkmemes;
 		extern bool misc_namespamidkmemes_static;

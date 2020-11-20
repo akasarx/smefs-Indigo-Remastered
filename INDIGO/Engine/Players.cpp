@@ -12,9 +12,11 @@ namespace Engine {
 	CPlayers::~CPlayers() {
 		delete m_pMe;
 		delete m_pPlayers;
-
 		m_pMe = nullptr;
 		m_pPlayers = nullptr;
+#if ENABLE_DEBUG_FILE == 1
+		CSX::Log::Add("\n[Players - shutdown]");
+#endif
 	}
 
 	CMe* CPlayers::GetLocal() {

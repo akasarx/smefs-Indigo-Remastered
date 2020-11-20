@@ -15,7 +15,7 @@
 #define BASE_PLAYER_OBSERVER		"m_hObserverTarget"
 
 #define CS_PLAYER					"DT_CSPlayer"
-
+#define CS_PLAYER_IMMUNE			"m_bGunGameImmunity"
 #define CS_PLAYER_LIFESTATE			"m_lifeState"
 
 #define CS_PLAYER_HASHELMET			"m_bHasHelmet"
@@ -75,6 +75,7 @@ namespace Engine
 		namespace Entity
 		{
 			//[swap_lines]
+			extern DWORD m_bGunGameImmunity;
 			extern DWORD m_hMyWeapons;
 			extern DWORD m_hMyWearables;
 			extern DWORD m_hViewModel;

@@ -175,13 +175,18 @@ namespace Settings
 		bool misc_LegitAA = false;
 		bool misc_LegitAAToggle = false;
 		char misc_NameChanger = 0;
-		//char misc_ClanTagChanger = 0; //not used
+
+		//NOODLED DID IT
+		char misc_ClanTagChanger = 0; //not used
+
 		QAngle qLastTickAngle;
 		float misc_MenuColor[3] = { 0.f, 0.f, 0.f };
 		bool misc_SkinChanger = true;
 		bool misc_KnifeChanger = true;
-		/*bool misc_ThirdPerson = false;
-		float misc_ThirdPersonRange = 90.f;*/ //broken
+
+		//NOODLED DID IT
+		bool misc_ThirdPerson = false;
+		float misc_ThirdPersonRange = 90.f; //broken
 		float misc_fakelag_amount = 0.f;
 		bool misc_ChamsMaterials = false;
 		int misc_ChamsMaterialsList = 0;
@@ -202,7 +207,10 @@ namespace Settings
 		bool misc_WireHands = false;
 		//bool misc_mappredict = false; //not used
 		bool misc_NoHands = false;
-		//bool misc_AwpAim = false; //broken
+		
+		//NOODLED DID IT
+		bool misc_AwpAim = false; //broken
+
 		bool misc_AutoStrafe = false;
 		bool misc_Moonwalk = false;
 
@@ -215,13 +223,19 @@ namespace Settings
 
 		bool misc_AutoAccept = false;
 		bool misc_Spectators = false;
-		//bool misc_inventory = false; //not in client
+
+		//NOODLED DID IT
+		bool misc_inventory = false; //not in client
+
 		/*bool misc_RainbowMenu = false;
 		float misc_RainbowSpeed = 0.001f;*/ //not used!
 		bool misc_FovChanger = false;
 		int misc_FovView = 90;
 		int misc_FovModelView = 68;
-		//float misc_AwpAimColor[3] = { 0.f,0.f,0.f }; //broken
+
+		//NOODLED DID IT
+		float misc_AwpAimColor[3] = { 0.f,0.f,0.f }; //broken
+
 		float misc_TextColor[3] = { 0.f, 0.f, 0.f };
 		float hitmarkerAlpha;
 	}

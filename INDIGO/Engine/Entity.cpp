@@ -19,6 +19,23 @@ namespace Engine
 		return "";
 	}
 
+	//19th October 2020
+	int CBaseEntity::GetSequenceActivity(int sequence) {
+		auto hdr = Interfaces::ModelInfo()->GetStudioModel(this->GetModel());
+
+		if (!hdr)
+			return -1;
+
+		// c_csplayer vfunc 242, follow calls to find the function.
+		typedef int(__fastcall* GetSequenceActivity_t)(void*, studiohdr_t*, int);
+		static GetSequenceActivity_t GetSequenceActivityFn = (GetSequenceActivity_t)CSX::Memory::FindPatternV2(CLIENT_DLL, "55 8B EC 53 8B 5D 08 56 8B F1 83");
+		//static auto GetSequenceActivity = reinterpret_cast<int(__fastcall*)(void*, studiohdr_t*, int)>(Offsets::getSequenceActivity);
+#if ENABLE_DEBUG_FILE == 1
+		CSX::Log::Add("[FindPattern - GetSequenceActivity = %X]", GetSequenceActivityFn);
+#endif
+		return GetSequenceActivityFn(this, hdr, sequence);
+	}
+
 	//19 October 2020
 	bool CBaseEntity::IsPlayer() {
 		typedef bool(__thiscall* IsPlayerFn)(void*);
@@ -30,10 +47,25 @@ namespace Engine
 		return (!IsDead() && GetHealth() > 0 && !IsDormant()); //IsDormant lol
 	}
 
-	bool CBaseEntity::IsDead()
-	{
-		const auto LifeState = *reinterpret_cast<PBYTE>(DWORD(this) + Offset::Entity::m_lifeState);
-		return (LifeState != LIFE_ALIVE);
+	bool CBaseEntity::IsDead() {
+		BYTE LifeState = *(PBYTE)((DWORD)this + Offset::Entity::m_lifeState);
+		switch (LifeState) {
+		case LIFE_ALIVE: //alive
+			return false;
+			break;
+		case LIFE_DYING: //playing death animation so dead
+			return true;
+			break;
+		case LIFE_DEAD: //dead
+			return true;
+			break;
+		case LIFE_RESPAWNABLE: //dead
+			return true;
+			break;
+		case LIFE_DISCARDBODY: //dead
+			return true;
+			break;
+		}
 	}
 
 	Vector CBaseEntity::GetOrigin()
@@ -194,7 +226,7 @@ namespace Engine
 		return reinterpret_cast<PVOID>(DWORD(this) + DWORD(Offset::Entity::m_hActiveWeapon));
 	}
 
-	//reverted, as it wasn't working.
+	//will nullptr with stickers
 	CBaseWeapon* CBaseEntity::GetBaseWeapon() {
 		return (CBaseWeapon*)Interfaces::EntityList()->GetClientEntityFromHandle((PVOID)*(PDWORD)GetActiveWeapon());
 	}
@@ -322,8 +354,7 @@ namespace Engine
 		return pHitboxBox;
 	}
 
-	mstudiohitboxset_t* CBaseEntity::GetHitBoxSet()
-	{
+	mstudiohitboxset_t* CBaseEntity::GetHitBoxSet() {
 		studiohdr_t* pStudioModel = nullptr;
 		mstudiohitboxset_t* pHitboxSet = nullptr;
 
@@ -340,8 +371,7 @@ namespace Engine
 		return pHitboxSet;
 	}
 
-	Vector CBaseEntity::GetHitboxPosition(int nHitbox)
-	{
+	Vector CBaseEntity::GetHitboxPosition(int nHitbox) {
 		matrix3x4_t MatrixArray[MAXSTUDIOBONES];
 		Vector vRet, vMin, vMax;
 
@@ -366,35 +396,49 @@ namespace Engine
 		return vRet;
 	}
 
-	int CBaseViewModel::GetModelIndex()
-	{
+	//hehe
+	Vector& CBaseEntity::ThirdPersonAngles() {
+		return *(Vector*)((uintptr_t)this + Offset::Entity::deadflag + 4);
+	}
+
+	bool CBaseEntity::GetImmunity() {
+		return *reinterpret_cast<bool*>(uintptr_t(this) + Offset::Entity::m_bGunGameImmunity);
+	}
+
+	int CBaseViewModel::GetModelIndex() {
 		// DT_BaseViewModel -> m_nModelIndex
 		return *reinterpret_cast<int*>(DWORD(this) + Offset::Entity::m_nModelIndex);
 	}
 
-	void CBaseViewModel::SetModelIndex(int nModelIndex)
-	{
+	//19 October 2020 - FindPattern IsBreakableEntity Pseudocode
+	//m_takeDamage
+	void CBaseEntity::SetTakeDamage(int num) {
+		*(int*)((DWORD)this + 640) = num;
+	}
+	int CBaseEntity::GetTakeDamage() {
+		return *(int*)((DWORD)this + 640);
+	}
+
+	void CBaseViewModel::SetModelIndex(int nModelIndex) {
 		VirtualFn(void)(PVOID, int);
 		GetMethod<OriginalFn>(this, 75)(this, nModelIndex);
 		// DT_BaseViewModel -> m_nModelIndex
 		//*(int*)( ( DWORD )this + Offset::Entity::m_nModelIndex ) = nModelIndex;
 	}
 
-	void CBaseViewModel::SetWeaponModel(const char* Filename, IClientEntity* Weapon)
-	{
+	//dunno when this was updated, 19 oct 2020?
+	void CBaseViewModel::SetWeaponModel(const char* Filename, IClientEntity* Weapon) {
 		typedef void (__thiscall* SetWeaponModelFn)(void*, const char*, IClientEntity*);
-		return GetMethod<SetWeaponModelFn>(this, 242)(this, Filename, Weapon);
+		return GetMethod<SetWeaponModelFn>(this, 243)(this, Filename, Weapon); //242
 	}
 
-	DWORD CBaseViewModel::GetOwner()
-	{
+	DWORD CBaseViewModel::GetOwner() {
 		// DT_BaseViewModel -> m_hOwner
 		return *reinterpret_cast<PDWORD>(DWORD(this) + Offset::Entity::m_hOwner);
 	}
 
-	DWORD CBaseViewModel::GetWeapon()
-	{
+	DWORD CBaseViewModel::GetWeapon() {
 		// DT_BaseViewModel -> m_hWeapon
-		return *reinterpret_cast<PDWORD>(DWORD(this) + Offset::Entity::m_hWeapon);
+		return *reinterpret_cast<PDWORD>(DWORD(this) + Offset::Entity::m_hWeapon); //263
 	}
 }

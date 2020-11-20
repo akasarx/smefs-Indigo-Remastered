@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <DirectXMath.h>
 
 typedef float vec_t;
 typedef int qboolean;
@@ -18,6 +19,8 @@ typedef unsigned __int64		uint64;
 #ifndef M_PI
 #define M_PI			3.14159265358979323846
 #define DEG2RAD( x ) ( ( float )( x ) * ( float )( ( float )( M_PI ) / 180.0f ) )
+#define DEG2RAD2(x) DirectX::XMConvertToRadians(x)
+#define RAD2DEG2(x) DirectX::XMConvertToDegrees(x)
 #endif
 
 inline uint32& FloatBits( vec_t& f )

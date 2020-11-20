@@ -22,13 +22,15 @@ LRESULT WINAPI GUI_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 CGui::CGui() {}
 
-CGui::~CGui()
-{
+CGui::~CGui() {
 	ImGui_ImplDX9_Shutdown();
+#if ENABLE_DEBUG_FILE == 1
+	CSX::Log::Add("[GUI - shutdown]\n");
+#endif
 }
 
-void CGui::GUI_Init(IDirect3DDevice9 * pDevice)
-{
+bool wndp; //wndproc
+void CGui::GUI_Init(IDirect3DDevice9 * pDevice) {
 	HWND hWindow = FindWindowA("Valve001", 0);
 
 	ImGui_ImplDX9_Init(hWindow, pDevice);
@@ -68,6 +70,13 @@ void CGui::GUI_Init(IDirect3DDevice9 * pDevice)
 	ImGui_ImplDX9_CreateDeviceObjects();
 
 	WndProc_o = (WNDPROC)SetWindowLongA(hWindow, GWL_WNDPROC, (LONG)(LONG_PTR)GUI_WndProc);
+	//WndProc hook
+#if ENABLE_DEBUG_FILE == 1
+	if (!wndp) {
+		CSX::Log::Add("[Hooked - WndProc]");
+		wndp = true;
+	}
+#endif
 
 	bIsGuiInitalize = true;
 }

@@ -13,16 +13,18 @@ namespace Engine {
 			We are NOT responsible for ANY bans that may occur during the process of using this cheat. This includes, but not limited to, VAC, Untrusted and
 			Overwatch bans.
 		*/
-		CSX::Hook::VTable IDirect3DDevice9Table;
-		CSX::Hook::VTable SoundTable;
-		CSX::Hook::VTable ClientModeTable;
-		CSX::Hook::VTable GameEventTable;
-		CSX::Hook::VTable ModelRenderTable;
-		CSX::Hook::VTable ClientTable;
-		CSX::Hook::VTable SurfaceTable;
-		CSX::Hook::VTable EngineTable;
-		CSX::Hook::VTable SteamGameCoordinatorTable;
+		CSX::Hook::VTable device; //IDirect3DDevice9Table;
+		CSX::Hook::VTable surface; //ISurfaceTable
+		CSX::Hook::VTable client; //IBaseClientTable
+		CSX::Hook::VTable clientmode; //IClientModeTable;
+		CSX::Hook::VTable eventmanager; //IGameEventManagerTable
+		CSX::Hook::VTable sound;
+		CSX::Hook::VTable modelrender;
+		CSX::Hook::VTable sv_cheats; //convar lol
+		CSX::Hook::VTable engine;
+		CSX::Hook::VTable steam; //steamgamecoordinator
 		IDirect3DDevice9* g_pDevice = nullptr;
+		bool svcheats_init = false;
 
 		typedef HRESULT(WINAPI* Present_t)(IDirect3DDevice9* pDevice, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
 		Present_t Present_o;
@@ -34,7 +36,7 @@ namespace Engine {
 		HRESULT WINAPI Hook_Present(IDirect3DDevice9* pDevice, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion) {
 #if ENABLE_DEBUG_FILE == 1
 			if (!ps) {
-				CSX::Log::Add("\n[Hooked - Present]");
+				CSX::Log::Add("[Hooked - Present]");
 				ps = true;
 			}
 #endif
@@ -67,16 +69,16 @@ namespace Engine {
 			if (!pCmd->command_number) {
 				return true;
 			}
-			ClientModeTable.UnHook();
+			clientmode.UnHook();
 			auto ebp = (uintptr_t*)(uintptr_t(_AddressOfReturnAddress()) - sizeof(void*));
 			bool& bSendPacket = *reinterpret_cast<bool*>( *ebp - 0x1C );
 			Client::OnCreateMove(pCmd, bSendPacket);
 			bool ret = Interfaces::ClientMode()->CreateMove(flInputSampleTime, pCmd);
-			ClientModeTable.ReHook();
+			clientmode.ReHook();
 			return false;
 		}
 
-		bool dpsse;
+		bool dpsse; //glow :D
 		int WINAPI Hook_DoPostScreenSpaceEffects(int callback) {
 #if ENABLE_DEBUG_FILE == 1
 			if (!dpsse) {
@@ -84,42 +86,17 @@ namespace Engine {
 				dpsse = true;
 			}
 #endif
-			ClientModeTable.UnHook();
+			clientmode.UnHook();
 			int ret = Interfaces::ClientMode()->DoPostScreenSpaceEffects(callback);
-			ClientModeTable.ReHook();
-			auto glow_target = [](GlowObjectDefinition_t& glowObject, Color color) -> void {
-				glowObject.m_flRed = color.r() / 255.f;
-				glowObject.m_flGreen = color.g() / 255.f;
-				glowObject.m_flBlue = color.b() / 255.f;
-				glowObject.m_flAlpha = color.a() / 255.f;
-				glowObject.m_bRenderWhenOccluded = true;
-				glowObject.m_bRenderWhenUnoccluded = false;
-			};
-			if (Interfaces::GlowManager && Interfaces::Engine()->IsConnected()) {
-				if (Settings::Esp::glow) {
-					for (auto i = 0; i < Interfaces::GlowManager()->m_GlowObjectDefinitions.Count(); i++) {
-						auto& glowObject = Interfaces::GlowManager()->m_GlowObjectDefinitions[i];
-						auto entity = reinterpret_cast<CBaseEntity*>(glowObject.m_pEntity);
-						if (!entity || glowObject.IsUnused()) {
-							continue;
-						}
-						switch (entity->GetClientClass()->m_ClassID) {
-							case (int)CLIENT_CLASS_ID::CCSPlayer: {
-								if (entity->GetTeam() != Client::g_pPlayers->GetLocal()->m_pEntity->GetTeam()) {
-									glow_target(glowObject, Color(255, 255, 255, 255));
-								}
-							}
-							break;
-							default:
-								break;
-						}
-					}
-				}
+			clientmode.ReHook();
+			if (Interfaces::GlowManager && Interfaces::Engine()->IsConnected() &&
+				Settings::Esp::glow && Interfaces::Engine()->GetLocalPlayer()) {
+				CMisc::Glow::Get().Run(); //lol
 			}
 			return ret;
 		}
 
-		int ic1; //is connected 1
+		int ic1;
 		bool WINAPI Hook_IsConnected() {
 			//19th October 2020
 			static void* unk = CSX::Memory::NewPatternScan(GetModuleHandleA(CLIENT_DLL), "75 04 B0 01 5F") - 2;
@@ -129,16 +106,17 @@ namespace Engine {
 				ic1 = true;
 			}
 #endif
-			/*if (_ReturnAddress() == unk && Settings::Misc::misc_inventory) {
+			//NOODLED DID IT
+			if (_ReturnAddress() == unk && Settings::Misc::misc_inventory) {
 				return false;
-			}*/ //not called anyway
-			EngineTable.UnHook();
+			}  //not called anyway
+			engine.UnHook();
 			bool ret = Interfaces::Engine()->IsConnected();
-			EngineTable.ReHook();
+			engine.ReHook();
 			return ret;
 		}
 
-		bool orv; //ovr
+		bool orv; //third person :D
 		bool WINAPI Hook_OverrideView(CViewSetup* pSetup) {
 #if ENABLE_DEBUG_FILE == 1
 			if (!orv) {
@@ -147,23 +125,23 @@ namespace Engine {
 			}
 #endif
 			Client::OnOverrideView(pSetup);
-			ClientModeTable.UnHook();
+			clientmode.UnHook();
 			bool ret = Interfaces::ClientMode()->OverrideView(pSetup);
-			ClientModeTable.ReHook();
+			clientmode.ReHook();
 			return ret;
 		}
 
-		bool gvm; //gvm
+		bool gvm;
 		float WINAPI Hook_GetViewModelFOV() {
 #if ENABLE_DEBUG_FILE == 1
 			if (!gvm) {
-				CSX::Log::Add("[Hooked - GetViewModelFOV]\n");
+				CSX::Log::Add("[Hooked - GetViewModelFOV]");
 				gvm = true;
 			}
 #endif
-			ClientModeTable.UnHook();
+			clientmode.UnHook();
 			float fov = Interfaces::ClientMode()->GetViewModelFOV();
-			ClientModeTable.ReHook();
+			clientmode.ReHook();
 			Client::OnGetViewModelFOV(fov);
 			return fov;
 		}
@@ -172,13 +150,13 @@ namespace Engine {
 		EGCResults __fastcall Hook_RetrieveMessage(void* ecx, void* edx, uint32_t *punMsgType, void *pubDest, uint32_t cubDest, uint32_t *pcubMsgSize) {
 #if ENABLE_DEBUG_FILE == 1
 			if (!rm) {
-				CSX::Log::Add("[Hooked - RetrieveMessage]");
+				CSX::Log::Add("\n[Hooked - RetrieveMessage]");
 				rm = true;
 			}
 #endif
-			SteamGameCoordinatorTable.UnHook();
+			steam.UnHook();
 			EGCResults status = Interfaces::SteamGameCoordinator()->RetrieveMessage(punMsgType, pubDest, cubDest, pcubMsgSize);
-			SteamGameCoordinatorTable.ReHook();
+			steam.ReHook();
 			if (status != k_EGCResultOK) {
 				return status;
 			}
@@ -197,9 +175,9 @@ namespace Engine {
 			uint32_t messageType = unMsgType & 0x7FFFFFFF;
 			void* pubDataMutable = const_cast<void*>(pubData);
 			Client::OnSendMessage(ecx, edx, unMsgType, pubData, cubData);
-			SteamGameCoordinatorTable.UnHook();
+			steam.UnHook();
 			EGCResults status = Interfaces::SteamGameCoordinator()->SendMessage(unMsgType, pubData, cubData);
-			SteamGameCoordinatorTable.ReHook();
+			steam.ReHook();
 			return status;
 		}
 
@@ -213,15 +191,15 @@ namespace Engine {
 #endif
 			bool ret = false;
 			if (!pEvent) {
-				GameEventTable.UnHook();
+				eventmanager.UnHook();
 				ret = Interfaces::GameEvent()->FireEventClientSide(pEvent);
-				GameEventTable.ReHook();
+				eventmanager.ReHook();
 				return ret;
 			}
 			Client::OnFireEventClientSideThink(pEvent);
-			GameEventTable.UnHook();
+			eventmanager.UnHook();
 			ret = Interfaces::GameEvent()->FireEventClientSide(pEvent);
-			GameEventTable.ReHook();
+			eventmanager.ReHook();
 			return ret;
 		}
 
@@ -233,12 +211,13 @@ namespace Engine {
 				fsn = true;
 			}
 #endif
-			Client::OnFrameStageNotify(Stage);
-			ClientTable.UnHook();
+			Client::OnFrameStageNotify(Stage); //no need!
+			client.UnHook();
 			Interfaces::Client()->FrameStageNotify(Stage);
-			ClientTable.ReHook();
+			client.ReHook();
 		}
-
+		
+		//broken
 		bool es1;
 		int WINAPI Hook_EmitSound1(IRecipientFilter& filter, int iEntIndex, int iChannel, const char *pSoundEntry, unsigned int nSoundEntryHash, const char *pSample,
 			float flVolume, soundlevel_t iSoundlevel, int nSeed, int iFlags = 0, int iPitch = PITCH_NORM,
@@ -253,11 +232,11 @@ namespace Engine {
 			if (pSample) {
 				Client::OnPlaySound(pOrigin, pSample);
 			}
-			SoundTable.UnHook();
+			sound.UnHook();
 			int ret = Interfaces::Sound()->EmitSound1(filter, iEntIndex, iChannel, pSoundEntry, nSoundEntryHash, pSample,
 				flVolume, iSoundlevel, nSeed, iFlags, iPitch,
 				pOrigin, pDirection, pUtlVecOrigins, bUpdatePositions, soundtime, speakerentity);
-			SoundTable.ReHook();
+			sound.ReHook();
 			return ret;
 		}
 
@@ -275,11 +254,11 @@ namespace Engine {
 			if (pSample) {
 				Client::OnPlaySound(pOrigin, pSample);
 			}
-			SoundTable.UnHook();
+			sound.UnHook();
 			int ret = Interfaces::Sound()->EmitSound2(filter, iEntIndex, iChannel, pSoundEntry, nSoundEntryHash, pSample,
 				flVolume, flAttenuation, nSeed, iFlags, iPitch,
 				pOrigin, pDirection, pUtlVecOrigins, bUpdatePositions, soundtime, speakerentity);
-			SoundTable.ReHook();
+			sound.ReHook();
 			return ret;
 		}
 
@@ -293,7 +272,7 @@ namespace Engine {
 				dme = true;
 			}
 #endif
-			ModelRenderTable.UnHook();
+			modelrender.UnHook();
 			if (ctx && pCustomBoneToWorld) {
 				Client::OnDrawModelExecute(ctx, state, pInfo, pCustomBoneToWorld);
 			}
@@ -301,7 +280,7 @@ namespace Engine {
 			if (ctx && pCustomBoneToWorld && Client::g_pEsp && Settings::Esp::esp_Chams) {
 				Interfaces::ModelRender()->ForcedMaterialOverride(0);
 			}
-			ModelRenderTable.ReHook();
+			modelrender.ReHook();
 		}
 
 		bool plays;
@@ -312,28 +291,74 @@ namespace Engine {
 				plays = true;
 			}
 #endif
-			SurfaceTable.UnHook();
+			surface.UnHook();
 			if (pszSoundName) {
 				Client::OnPlaySound(pszSoundName);
 			}
 			Interfaces::Surface()->PlaySound(pszSoundName);
-			SurfaceTable.ReHook();
+			surface.ReHook();
 		}
 
 		bool lc;
 		void Hook_LockCursor() {
 #if ENABLE_DEBUG_FILE == 1
 			if (!lc) {
-				CSX::Log::Add("[Hooked - LockCursor]\n");
+				CSX::Log::Add("\n[Hooked - LockCursor]");
 				lc = true;
 			}
 #endif
-			SurfaceTable.UnHook();
+			surface.UnHook();
 			Interfaces::Surface()->LockCursor();
-			SurfaceTable.ReHook();
+			surface.ReHook();
 			if (bIsGuiVisible) {
 				Interfaces::Surface()->UnlockCursor();
 			}
+		}
+		
+		//bypass sv_cheats
+		bool __fastcall Hook_GetBool_SVCheats(PVOID pConvar, int edx) {
+			try {
+				//11th March 2019
+				//xref : "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %16s"
+				//This is the return address of GetBool_SVCheats
+				//static DWORD CAM_THINK = CSX::Memory::FindCodePattern(CLIENT_DLL, (BYTE*)"\xC3\x55\x8B\xEC\x8B\x55\x0C\x8B\x45\x08", "xxxxxxxxxx");
+
+				//19th october 2020
+				static DWORD CAM_THINK = CSX::Memory::FindPattern(CLIENT_DLL, "55 8B EC 83 E4 F8 83 EC 34 53 8B 5D 0C 89", 0) + 0x1;
+#if ENABLE_DEBUG_FILE == 1
+				if (!svcheats_init) {
+					CSX::Log::Add("[FindPattern/Hooked - GetBool_SVCheats = %X]\n", CAM_THINK);
+					svcheats_init = true;
+				}
+#endif
+				if (!pConvar) {
+					return false;
+				}
+
+				//if any features are "untrusted", or require sv_cheats, then add :)
+				if (Settings::Misc::misc_ThirdPerson || Settings::Untrusted) {
+					if ((DWORD)_ReturnAddress() == CAM_THINK) {
+						return true;
+					}
+				}
+
+				//i think u unhook then call ofunc then rehook, right?
+				sv_cheats.UnHook();
+				//idk vmt sooo this is my best try hehe
+				static auto ofunc = Interfaces::GetConVar()->FindVar("sv_cheats");
+				sv_cheats.ReHook();
+				return ofunc;
+			}
+			catch (...) {
+				//fail
+#if ENABLE_DEBUG_FILE == 1
+				CSX::Log::Add("[Hooks - GetBool_SVCheats failed!]");
+#endif
+				return false;
+			}
+			//:'(
+			/*static auto ofunc = convar.get_original<GetBool_t>(13);
+			return ofunc(pConvar);*/
 		}
 
 		bool Initialize() {
@@ -368,94 +393,94 @@ namespace Engine {
 #if ENABLE_DEBUG_FILE == 1
 			CSX::Log::Add("[FindPattern - dwPresent = %X]", dwPresent_o);
 #endif
-
 			if (d3d9TablePtrPtr && dwPresent_o) {
 				g_pDevice = (IDirect3DDevice9*)(**(PDWORD*)d3d9TablePtrPtr);
-				if (IDirect3DDevice9Table.InitTable(g_pDevice)) {
+				if (device.InitTable(g_pDevice)) {
+					//DX9 - Hook Present and Reset
 					DWORD_PTR* dwAddress = *dwPresent_o;
 					Present_o = (Present_t)(*dwAddress);
 					*dwAddress = (DWORD_PTR)(&Hook_Present);
+					Reset_o = (Reset_t)device.GetHookIndex(D3D9::TABLE::Reset, Hook_Reset);
 
-					//works
-					Reset_o = (Reset_t)IDirect3DDevice9Table.GetHookIndex(D3D9::TABLE::Reset, Hook_Reset);
-
-					if (!ClientModeTable.InitTable(Interfaces::ClientMode())) {
-#if ENABLE_DEBUG_FILE == 1
-						CSX::Log::Add("\n[Clientmode - failed to init!]");
-#endif*/
-						return false;
-					}
-
-					//works
-					ClientModeTable.HookIndex(TABLE::IClientMode::CreateMove, Hook_CreateMove);
-					ClientModeTable.HookIndex(TABLE::IClientMode::OverrideView, Hook_OverrideView);
-					ClientModeTable.HookIndex(TABLE::IClientMode::GetViewModelFOV, Hook_GetViewModelFOV);
-					ClientModeTable.HookIndex(44, Hook_DoPostScreenSpaceEffects);
-
-					if (!SteamGameCoordinatorTable.InitTable(Interfaces::SteamGameCoordinator())) {
-#if ENABLE_DEBUG_FILE == 1
-						CSX::Log::Add("\n[SteamGameCoordinator - failed to init!]");
-#endif
-						return false;
-					}
-
-					//works
-					SteamGameCoordinatorTable.HookIndex(0, Hook_SendMessage);
-					SteamGameCoordinatorTable.HookIndex(2, Hook_RetrieveMessage);
-
-					if (!GameEventTable.InitTable(Interfaces::GameEvent())) {
-#if ENABLE_DEBUG_FILE == 1
-						CSX::Log::Add("\n[EventManager - failed to init!]");
-#endif
-						return false;
-					}
-
-					//works
-					GameEventTable.HookIndex(TABLE::IGameEventManager2::FireEventClientSide, Hook_FireEventClientSideThink);
-
-					if (!ClientTable.InitTable(Interfaces::Client())) {
-#if ENABLE_DEBUG_FILE == 1
-						CSX::Log::Add("\n[Client - failed to init!]");
-#endif
-						return false;
-					}
-
-					//works
-					ClientTable.HookIndex(TABLE::IBaseClientDLL::FrameStageNotify, Hook_FrameStageNotify);
-
-					if (!SoundTable.InitTable(Interfaces::Sound())) {
-#if ENABLE_DEBUG_FILE == 1
-						CSX::Log::Add("\n[Sound - failed to init!]");
-#endif
-						return false;
-					}
-
-					//works
-					SoundTable.HookIndex(TABLE::IEngineSound::EmitSound2, Hook_EmitSound2);
-
-					if (!ModelRenderTable.InitTable(Interfaces::ModelRender())) {
-#if ENABLE_DEBUG_FILE == 1
-						CSX::Log::Add("\n[Model - failed to init!]");
-#endif
-						return false;
-					}
-
-					//works
-					ModelRenderTable.HookIndex(TABLE::IVModelRender::DrawModelExecute, Hook_DrawModelExecute);
-
-					if (!SurfaceTable.InitTable(Interfaces::Surface())) {
+					//surface
+					if (!surface.InitTable(Interfaces::Surface())) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[Surface - failed to init!]");
 #endif
 						return false;
 					}
+					surface.HookIndex(TABLE::ISurface::PlaySound, Hook_PlaySound);
+					surface.HookIndex(TABLE::ISurface::LockCursor, Hook_LockCursor);
 
-					//doesn't work
-					SurfaceTable.HookIndex(TABLE::ISurface::PlaySound, Hook_PlaySound);
+					//client
+					if (!client.InitTable(Interfaces::Client())) {
+#if ENABLE_DEBUG_FILE == 1
+						CSX::Log::Add("\n[Client - failed to init!]");
+#endif
+						return false;
+					}
+					client.HookIndex(TABLE::IBaseClientDLL::FrameStageNotify, Hook_FrameStageNotify);
 
-					//works
-					SurfaceTable.HookIndex(TABLE::ISurface::LockCursor, Hook_LockCursor);
+					//clientmode
+					if (!clientmode.InitTable(Interfaces::ClientMode())) {
+#if ENABLE_DEBUG_FILE == 1
+						CSX::Log::Add("\n[Clientmode - failed to init!]");
+#endif
+						return false;
+					}
+					clientmode.HookIndex(TABLE::IClientMode::CreateMove, Hook_CreateMove);
+					clientmode.HookIndex(TABLE::IClientMode::OverrideView, Hook_OverrideView);
+					clientmode.HookIndex(TABLE::IClientMode::GetViewModelFOV, Hook_GetViewModelFOV);
+					clientmode.HookIndex(TABLE::IClientMode::DoPostScreenSpaceEffects, Hook_DoPostScreenSpaceEffects);
+					
+					//eventmanager
+					if (!eventmanager.InitTable(Interfaces::GameEvent())) {
+#if ENABLE_DEBUG_FILE == 1
+						CSX::Log::Add("\n[EventManager - failed to init!]");
+#endif
+						return false;
+					}
+					eventmanager.HookIndex(TABLE::IGameEventManager2::FireEventClientSide, Hook_FireEventClientSideThink);
+					
+					//sound
+					if (!sound.InitTable(Interfaces::Sound())) {
+#if ENABLE_DEBUG_FILE == 1
+						CSX::Log::Add("\n[Model - failed to init!]");
+#endif
+						return false;
+					}
+					//sound.HookIndex(TABLE::IEngineSound::EmitSound1, Hook_EmitSound1); //idk if needed
+					sound.HookIndex(TABLE::IEngineSound::EmitSound2, Hook_EmitSound2);
 
+					//modelrender
+					if (!modelrender.InitTable(Interfaces::ModelRender())) {
+#if ENABLE_DEBUG_FILE == 1
+						CSX::Log::Add("\n[Model - failed to init!]");
+#endif
+						return false;
+					}
+					modelrender.HookIndex(TABLE::IVModelRender::DrawModelExecute, Hook_DrawModelExecute);
+					
+					//sv_cheats
+					if (!sv_cheats.InitTable(Interfaces::GetConVar()->FindVar("sv_cheats"))) {
+#if ENABLE_DEBUG_FILE == 1
+						CSX::Log::Add("\n[GetBool_SVCheats - failed to init!]");
+#endif
+						return false;
+					}
+					sv_cheats.HookIndex(TABLE::convar::getbool, Hook_GetBool_SVCheats);
+					
+					//steamgamecoordinator
+					if (!steam.InitTable(Interfaces::SteamGameCoordinator())) {
+#if ENABLE_DEBUG_FILE == 1
+						CSX::Log::Add("\n[SteamGameCoordinator - failed to init!]");
+#endif
+						return false;
+					}
+					steam.HookIndex(0, Hook_SendMessage);
+					steam.HookIndex(2, Hook_RetrieveMessage);
+
+					//all done
 					if (Client::Initialize(g_pDevice)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[Client - initialized!]");
@@ -467,16 +492,39 @@ namespace Engine {
 			return false;
 		}
 
-		void Shutdown() {
-			IDirect3DDevice9Table.UnHook();
-			SoundTable.UnHook();
-			ClientModeTable.UnHook();
-			GameEventTable.UnHook();
-			ModelRenderTable.UnHook();
-			ClientTable.UnHook();
-			SurfaceTable.UnHook();
-			EngineTable.UnHook();
-			SteamGameCoordinatorTable.UnHook();
+		int Shutdown() {
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("\n[Hooks - shutting down!]");
+			CSX::Log::Add("[Hooks - device = %X", device);
+			CSX::Log::Add("[Hooks - surface = %X", surface);
+			CSX::Log::Add("[Hooks - client = %X", client);
+			CSX::Log::Add("[Hooks - clientmode = %X", clientmode);
+			CSX::Log::Add("[Hooks - eventmanager = %X", eventmanager);
+			CSX::Log::Add("[Hooks - sound = %X", sound);
+			CSX::Log::Add("[Hooks - modelrender = %X", modelrender);
+			CSX::Log::Add("[Hooks - sv_cheats = %X", sv_cheats);
+			CSX::Log::Add("[Hooks - engine = %X", engine);
+			CSX::Log::Add("[Hooks - steamgamecoordinator = %X", steam);
+#endif
+			device.UnHook(); //IDirect3DDevice9Table
+			surface.UnHook(); //ISurfaceTable
+			client.UnHook(); //IBaseClientTable
+			clientmode.UnHook(); //IClientModeTable
+			eventmanager.UnHook(); //IGameEventManagerTable
+			sound.UnHook(); //SoundTable
+			modelrender.UnHook(); //ModelRenderTable
+			sv_cheats.UnHook(); //convar lol
+			engine.UnHook(); //EngineTable
+			steam.UnHook(); //SteamGameCoordinatorTable
+
+			//need to undo glow
+			CMisc::Glow* misc;
+			misc->Shutdown();
+
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Hooks - unhooked!]\n");
+#endif
+			return true;
 		}
 	}
 }
