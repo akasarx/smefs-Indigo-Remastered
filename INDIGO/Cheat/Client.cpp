@@ -360,8 +360,9 @@ namespace Client
 			if (Settings::Esp::esp_Time)
 				g_pRender->Text(30, 45, false, true, Color::White(), std::asctime(std::localtime(&result)));
 
-			//if (Settings::Aimbot::aim_Backtrack)
-				//g_pRender->Text(15, 66, false, true, Color::White(), to_string(BacktrackTicks()).c_str());
+			//NOODLED DID IT
+			if (Settings::Aimbot::aim_Backtrack)
+				g_pRender->Text(15, 66, false, true, Color::White(), to_string(BacktrackTicks()).c_str());
 			g_pRender->EndRender();
 		}
 	}
@@ -723,8 +724,12 @@ namespace Client
 			ImGui::Spacing();
 
 			ImGui::PushItemWidth(362.f);
-			//ImGui::SliderInt("Min Distance", &Settings::Triggerbot::weapon_trigger_settings[iWeaponID].trigger_DistanceMin, 0, 5000);
-			//ImGui::SliderInt("Max Distance", &Settings::Triggerbot::weapon_trigger_settings[iWeaponID].trigger_DistanceMax, 0, 5000);
+
+			//noodled did it
+			ImGui::SliderInt("Min Distance", &Settings::Triggerbot::weapon_trigger_settings[iWeaponID].trigger_DistanceMin, 0, 5000);
+			ImGui::SliderInt("Max Distance", &Settings::Triggerbot::weapon_trigger_settings[iWeaponID].trigger_DistanceMax, 0, 5000);
+
+
 			ImGui::SliderInt("FOV", &Settings::Triggerbot::weapon_trigger_settings[iWeaponID].trigger_Fov, 1, 100);
 			ImGui::SliderInt("First Shot Delay", &Settings::Triggerbot::weapon_trigger_settings[iWeaponID].trigger_DelayBefore, 0, 200);
 			ImGui::SliderInt("Next Shot Delay", &Settings::Triggerbot::weapon_trigger_settings[iWeaponID].trigger_DelayAfter, 0, 1000);
