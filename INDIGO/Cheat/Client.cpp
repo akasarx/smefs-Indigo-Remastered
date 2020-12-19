@@ -473,7 +473,7 @@ namespace Client
 	void OnFrameStageNotify(ClientFrameStage_t Stage) {
 		if (Interfaces::Engine()->IsInGame() && Interfaces::Engine()->IsConnected()) {
 			//no need for this, it's detected anyway, better to just use the hook :)
-			SpoofedConvar* sv_cheats_spoofed = nullptr;
+			/*SpoofedConvar* sv_cheats_spoofed = nullptr;
 			if (Settings::Untrusted)
 			{
 				if (sv_cheats_spoofed == nullptr)
@@ -487,11 +487,10 @@ namespace Client
 					sv_cheats_spoofed->~SpoofedConvar();
 					DELETE_MOD(sv_cheats_spoofed);
 				}
-			}
-			//NOODLED DID IT
-			if (g_pMisc) { //broken thirdperson lol
-				g_pMisc->FrameStageNotify(Stage);
-			}
+			}*/
+			/*if (g_pMisc) { 
+				g_pMisc->FrameStageNotify(Stage); //use overrideview instead for 3rd person
+			}*/
 			Skin_OnFrameStageNotify(Stage);
 			Gloves_OnFrameStageNotify(Stage);
 		}
@@ -915,13 +914,11 @@ namespace Client
 					Settings::Skin::knf_tt_skin = 0;
 					iSelectKnifeTTSkinIndex = -1;
 				}
-
 				ForceFullUpdate();
 			}
 			
-			//NOODLED DID IT
 			//fix it if you want sticker changer
-			//*
+			/*
 			if (ImGui::Checkbox("Sticker Changer", &Settings::Aimbot::weapon_aim_settings[iWeaponID].StickersEnabled)) {
 				Interfaces::Engine()->ClientCmd_Unrestricted2("record x; stop");
 			}
@@ -940,7 +937,7 @@ namespace Client
 
 			if (ImGui::Button(("Apply"), ImVec2(93.f, 20.f))) {
 				Interfaces::Engine()->ClientCmd_Unrestricted2("record x; stop");
-			}//*/
+			}*/
 		}
 
 		if (otherpages == 1)
@@ -1162,11 +1159,11 @@ namespace Client
 			ImGui::Separator();
 			ImGui::Spacing();
 
-			const char* items3[] = { "None" , "Number Bottom" , "Bar Bottom" , "Bar Left" };
+			const char* items3[] = { "None", "Number Bottom", "Bar Bottom", "Bar Left" };
 			ImGui::PushItemWidth(362.f);
 			ImGui::Combo("Health", &Settings::Esp::esp_Health, items3, IM_ARRAYSIZE(items3));
 
-			const char* items4[] = { "None" , "Number Bottom" , "Bar Bottom" , "Bar Right" };
+			const char* items4[] = { "None", "Number Bottom", "Bar Bottom", "Bar Right" };
 			ImGui::PushItemWidth(362.f);
 			ImGui::Combo("Armor", &Settings::Esp::esp_Armor, items4, IM_ARRAYSIZE(items4));
 
@@ -1305,49 +1302,6 @@ namespace Client
 			}
 			RefreshConfigs();
 		}
-
-		// old themes outdated since 4.0
-
-		//ImGui::Separator();
-
-		//const char* ThemesList[] = { "Purple" , "Default" , "Light Pink" , "Dark Blue" , "MidNight" , "Night" , "Dunno" , "Blue"  , "Black" , "Green" , "Yellow" , "Light Blue" , "Light Grey" , "pHooK" };
-
-		//ImGui::PushItemWidth(362.f);
-		//ImGui::Combo("Menu Color", &iMenuSheme, ThemesList, IM_ARRAYSIZE(ThemesList));
-
-		//ImGui::Separator();
-
-		/*if (ImGui::Button("Apply Color"))
-		{
-			if (iMenuSheme == 0)
-				g_pGui->purple();
-			else if (iMenuSheme == 1)
-				g_pGui->DefaultSheme1();
-			else if (iMenuSheme == 2)
-				g_pGui->RedSheme();
-			else if (iMenuSheme == 3)
-				g_pGui->darkblue();
-			else if (iMenuSheme == 4)
-				g_pGui->MidNightSheme();
-			else if (iMenuSheme == 5)
-				g_pGui->NightSheme();
-			else if (iMenuSheme == 6)
-				g_pGui->DunnoSheme();
-			else if (iMenuSheme == 7)
-				g_pGui->BlueSheme();
-			else if (iMenuSheme == 8)
-				g_pGui->BlackSheme2();
-			else if (iMenuSheme == 9)
-				g_pGui->green();
-			else if (iMenuSheme == 10)
-				g_pGui->pink();
-			else if (iMenuSheme == 11)
-				g_pGui->blue();
-			else if (iMenuSheme == 12)
-				g_pGui->yellow();
-			else if (iMenuSheme == 13)
-				g_pGui->BlackSheme();
-		}*/
 	}
 
 	void DrawMisc() // Misc
@@ -1397,10 +1351,9 @@ namespace Client
 			ImGui::Checkbox("Show Spectators", &Settings::Misc::misc_Spectators);
 			ImGui::SameLine(SpaceLineOne);
 			ImGui::Checkbox("Recoil Crosshair", &Settings::Misc::misc_Punch);
-
-			//NOODLED DID IT /*
+			/*
 			ImGui::SameLine(SpaceLineTwo);
-			ImGui::Checkbox("Inventory Unlocker", &Settings::Misc::misc_inventory); // doesn't work
+			ImGui::Checkbox("Inventory Unlocker", &Settings::Misc::misc_inventory); // doesn't work, but what is it even meant to do?
 			//*/
 			ImGui::Checkbox("No Flash", &Settings::Misc::misc_NoFlash);
 			ImGui::SameLine(SpaceLineOne);
@@ -1425,10 +1378,9 @@ namespace Client
 				ImGui::SliderInt("mFoV", &Settings::Misc::misc_FovModelView, 1, 190);
 				ImGui::Separator();
 			}
-
-			//NOODLED DID IT //*
+			/*
 			ImGui::Checkbox("Sniper Crosshair", &Settings::Misc::misc_AwpAim); // doesn't work
-			ImGui::SameLine(SpaceLineOne);//*/
+			ImGui::SameLine(SpaceLineOne);*/
 
 			ImGui::Checkbox("Disable Postprocess", &Settings::Misc::misc_Postprocess);
 			ImGui::Separator();

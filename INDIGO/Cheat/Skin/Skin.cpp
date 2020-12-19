@@ -371,13 +371,13 @@ enum class EStickerAttributeType
 	Rotation
 };
 
-DWORD dwEconItemInterfaceWrapper = 0x2DB0 + 0xC;
+//DWORD dwEconItemInterfaceWrapper = 0x2DB0 + 0xC; //broken and old af ofc 
 
-typedef float(__thiscall* GetStickerAttributeBySlotIndexFloatFn)(void*, int, EStickerAttributeType, float);
-GetStickerAttributeBySlotIndexFloatFn oGetStickerAttributeBySlotIndexFloat;
+/*typedef float(__thiscall* GetStickerAttributeBySlotIndexFloatFn)(void*, int, EStickerAttributeType, float);
+GetStickerAttributeBySlotIndexFloatFn oGetStickerAttributeBySlotIndexFloat;*/
+
 // Below is reserved for future use, if we want to add stickers.
-
-//NOODLED DID IT
+/*
 float __fastcall Hooked_GetStickerAttributeBySlotIndexFloat(void* thisptr, void* edx, int iSlot, EStickerAttributeType iAttribute, float flUnknown)
 {
 auto pItem = reinterpret_cast<CBaseAttributableItem*>(uintptr_t(thisptr) - dwEconItemInterfaceWrapper);
@@ -442,7 +442,7 @@ oGetStickerAttributeBySlotIndexInt = (GetStickerAttributeBySlotIndexIntFn)hooked
 hooked_vmt[5] = reinterpret_cast<void*>(&Hooked_GetStickerAttributeBySlotIndexInt);
 }
 vmt = hooked_vmt;
-}
+}*/
 
 
 void Skin_OnFrameStageNotify(ClientFrameStage_t Stage)
@@ -878,7 +878,8 @@ void InitializeKits()
 
 	}
 
-	//sticker kits don't work anyway, - dbg: Invalid EconItemView -- Can't create custom materials for wearable, debug this.
+	//sticker kits don't work anyway, - dbg: Invalid EconItemView -- Can't create custom materials for wearable
+	/*
 	// Dump sticker kits
 	{
 		//19th October 2020
@@ -935,5 +936,5 @@ void InitializeKits()
 		std::sort(k_stickers.begin(), k_stickers.end());
 
 		k_stickers.insert(k_stickers.begin(), { 0, "None" });
-	}
+	}*/
 }

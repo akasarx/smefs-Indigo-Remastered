@@ -24,7 +24,6 @@ namespace Engine {
 		CSX::Hook::VTable engine;
 		CSX::Hook::VTable steam; //steamgamecoordinator
 		IDirect3DDevice9* g_pDevice = nullptr;
-		bool svcheats_init = false;
 
 		typedef HRESULT(WINAPI* Present_t)(IDirect3DDevice9* pDevice, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
 		Present_t Present_o;
@@ -168,7 +167,7 @@ namespace Engine {
 		EGCResults __fastcall Hook_SendMessage(void* ecx, void* edx, uint32_t unMsgType, const void* pubData, uint32_t cubData) {
 #if ENABLE_DEBUG_FILE == 1
 			if (!sm) {
-				CSX::Log::Add("\n[Hooked - SendMessage]");
+				CSX::Log::Add("[Hooked - SendMessage]");
 				sm = true;
 			}
 #endif
@@ -225,7 +224,7 @@ namespace Engine {
 		{
 #if ENABLE_DEBUG_FILE == 1
 			if (!es1) {
-				CSX::Log::Add("\n[Hooked - EmitSound1]\n");
+				CSX::Log::Add("[Hooked - EmitSound1]\n");
 				es1 = true;
 			}
 #endif
@@ -247,7 +246,7 @@ namespace Engine {
 		{
 #if ENABLE_DEBUG_FILE == 1
 			if (!es2) {
-				CSX::Log::Add("\n[Hooked - EmitSound2]\n");
+				CSX::Log::Add("[Hooked - EmitSound2]\n");
 				es2 = true;
 			}
 #endif
@@ -303,7 +302,7 @@ namespace Engine {
 		void Hook_LockCursor() {
 #if ENABLE_DEBUG_FILE == 1
 			if (!lc) {
-				CSX::Log::Add("\n[Hooked - LockCursor]");
+				CSX::Log::Add("[Hooked - LockCursor]");
 				lc = true;
 			}
 #endif
@@ -315,50 +314,74 @@ namespace Engine {
 			}
 		}
 		
+		//log
+		bool svinit;
+		bool svofunc;
+		bool svconvar;
 		//bypass sv_cheats
 		bool __fastcall Hook_GetBool_SVCheats(PVOID pConvar, int edx) {
-			try {
-				//11th March 2019
-				//xref : "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %16s"
-				//This is the return address of GetBool_SVCheats
-				//static DWORD CAM_THINK = CSX::Memory::FindCodePattern(CLIENT_DLL, (BYTE*)"\xC3\x55\x8B\xEC\x8B\x55\x0C\x8B\x45\x08", "xxxxxxxxxx");
+			//FOR IDA:
+			//xref : "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %16s"
+			//This is the return address of GetBool_SVCheats
+			//static DWORD CAM_THINK
 
-				//19th october 2020
-				static DWORD CAM_THINK = CSX::Memory::FindPattern(CLIENT_DLL, "55 8B EC 83 E4 F8 83 EC 34 53 8B 5D 0C 89", 0) + 0x1;
+			//19th october 2020
+			static DWORD CAM_THINK = CSX::Memory::FindPattern(CLIENT_DLL, "55 8B EC 83 E4 F8 83 EC 34 53 8B 5D 0C 89", 0) + 0x1;
 #if ENABLE_DEBUG_FILE == 1
-				if (!svcheats_init) {
-					CSX::Log::Add("[FindPattern/Hooked - GetBool_SVCheats = %X]\n", CAM_THINK);
-					svcheats_init = true;
-				}
-#endif
-				if (!pConvar) {
-					return false;
-				}
-
-				//if any features are "untrusted", or require sv_cheats, then add :)
-				if (Settings::Misc::misc_ThirdPerson || Settings::Untrusted) {
-					if ((DWORD)_ReturnAddress() == CAM_THINK) {
-						return true;
-					}
-				}
-
-				//i think u unhook then call ofunc then rehook, right?
-				sv_cheats.UnHook();
-				//idk vmt sooo this is my best try hehe
-				static auto ofunc = Interfaces::GetConVar()->FindVar("sv_cheats");
-				sv_cheats.ReHook();
-				return ofunc;
+			if(!svinit) {
+				CSX::Log::Add("[FindPattern/Hooked - GetBool_SVCheats = %X]", CAM_THINK);
+				svinit = true;
 			}
-			catch (...) {
-				//fail
-#if ENABLE_DEBUG_FILE == 1
-				CSX::Log::Add("[Hooks - GetBool_SVCheats failed!]");
 #endif
+			//pConvar is the same as FindVar("sv_cheats") btw
+			if(!pConvar) {
 				return false;
 			}
-			//:'(
-			/*static auto ofunc = convar.get_original<GetBool_t>(13);
+
+#if ENABLE_DEBUG_FILE == 1
+			if(!svconvar) {
+				CSX::Log::Add("[Hooked - GetBool_SVCheats pConvar = %X]", pConvar);
+				svconvar = true;
+			}
+#endif
+			//idk vmt sooo this is my best try hehe
+			//unhook here?
+			sv_cheats.UnHook();
+			//then do whatever
+
+			//if any features are "untrusted", or require sv_cheats, then add :)
+			if(Settings::Untrusted) {
+				if((DWORD)_ReturnAddress() == CAM_THINK) {
+#if ENABLE_DEBUG_FILE == 1
+					CSX::Log::Add("\n[Hooked - GetBool_SVCheats set!]\n");
+#endif
+					return true;
+				}
+			}
+			/*bool GetBool() {
+				using OriginalFn = bool(__thiscall*)(void*);
+				return GetMethod<OriginalFn>(this, 13)(this);
+			}*/ //this is Convar
+
+			//:'( how to do it in proper hooking
+			/*static auto ofunc = convar.get_original<GetBool_t>(13); //13 is the index
 			return ofunc(pConvar);*/
+
+			/*get_original function, so it pretty much just does VMT GetFuncAddress
+			but with a cast*/
+			/* get_original(int index) { return (T)old_vftbl[index]; } */
+
+			//make sure returning original function (GetBool), not the convar!
+			static auto ofunc = (GetBool_t)sv_cheats.GetFuncAddress(13);
+#if ENABLE_DEBUG_FILE == 1
+			if(!svofunc) {
+				CSX::Log::Add("[Hooked - GetBool_SVCheats ofunc = %X]\n", ofunc);
+				svofunc = true;
+			}
+#endif
+			//rehook then return ofunc
+			sv_cheats.ReHook();
+			return ofunc;
 		}
 
 		bool Initialize() {
@@ -368,13 +391,18 @@ namespace Engine {
 #endif
 				return false;
 			}
-
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Hooks - module %s loaded!]", D3D9_DLL);
+#endif
 			if (!CSX::Utils::IsModuleLoad(SHADERPIDX9_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 				CSX::Log::Add("[Hooks - module %s not loaded!]", SHADERPIDX9_DLL);
 #endif
 				return false;
 			}
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Hooks - module %s loaded!]", SHADERPIDX9_DLL);
+#endif
 
 			if (!CSX::Utils::IsModuleLoad(GAMEOVERLAYRENDERER_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
@@ -382,16 +410,19 @@ namespace Engine {
 #endif
 				return false;
 			}
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Hooks - module %s loaded!]", GAMEOVERLAYRENDERER_DLL);
+#endif
 
 			//19 October 2020
 			DWORD d3d9TablePtrPtr = CSX::Memory::FindPattern(SHADERPIDX9_DLL, D3D9_PATTERN, D3D9_MASK, 1);
 #if ENABLE_DEBUG_FILE == 1
-			CSX::Log::Add("[FindPattern - pD3D9Table = %X]", d3d9TablePtrPtr);
+			CSX::Log::Add("\n[FindPattern - pD3D9Table = %X]", d3d9TablePtrPtr);
 #endif
 			//19th October 2020 - GameOverlayRenderer.dll v6.12.87.0
 			DWORD_PTR** dwPresent_o = (DWORD_PTR**)CSX::Memory::FindPattern(GAMEOVERLAYRENDERER_DLL, GMOR_PATTERN, GMOR_MASK, 1);
 #if ENABLE_DEBUG_FILE == 1
-			CSX::Log::Add("[FindPattern - dwPresent = %X]", dwPresent_o);
+			CSX::Log::Add("[FindPattern - dwPresent = %X]\n", dwPresent_o);
 #endif
 			if (d3d9TablePtrPtr && dwPresent_o) {
 				g_pDevice = (IDirect3DDevice9*)(**(PDWORD*)d3d9TablePtrPtr);
@@ -461,14 +492,14 @@ namespace Engine {
 					}
 					modelrender.HookIndex(TABLE::IVModelRender::DrawModelExecute, Hook_DrawModelExecute);
 					
-					//sv_cheats
+					/* //sv_cheats - test
 					if (!sv_cheats.InitTable(Interfaces::GetConVar()->FindVar("sv_cheats"))) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[GetBool_SVCheats - failed to init!]");
 #endif
 						return false;
 					}
-					sv_cheats.HookIndex(TABLE::convar::getbool, Hook_GetBool_SVCheats);
+					sv_cheats.HookIndex(13, Hook_GetBool_SVCheats);*/
 					
 					//steamgamecoordinator
 					if (!steam.InitTable(Interfaces::SteamGameCoordinator())) {

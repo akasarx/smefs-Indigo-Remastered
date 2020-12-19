@@ -90,12 +90,12 @@ namespace Settings
 		bool esp_Name = false;
 		bool esp_Rank = false;
 		bool esp_Chicken = false;
-		int esp_Health = 0;
-		int esp_Armor = 0;
+		int esp_Health = 0; //"None", "Number Bottom", "Bar Bottom", "Bar Left"
+		int esp_Armor = 0; //"None", "Number Bottom", "Bar Bottom", "Bar Right"
 		bool esp_Weapon = false;
 		bool esp_Ammo = false;
 		bool esp_Infoz = false;
-		bool esp_Distance = false;
+		bool esp_Distance = false; //why does this get turned on then?
 		bool esp_Sound = false;
 		bool esp_GrenadePrediction = false;
 		bool esp_Dlightz = false;
@@ -205,7 +205,7 @@ namespace Settings
 		bool misc_NoFlash = false;
 		bool misc_NoSmoke = false;
 		bool misc_WireHands = false;
-		//bool misc_mappredict = false; //not used
+		//bool misc_mappredict = false; //not used, not needed either rly
 		bool misc_NoHands = false;
 		
 		//NOODLED DID IT

@@ -149,7 +149,7 @@ void CMisc::OnCreateMove( CUserCmd* pCmd )
 	}
 }
 
-//broken/unnneeded - NOODLED DID IT / WANTS IT GONE
+//broken
 void CMisc::FrameStageNotify(ClientFrameStage_t Stage)
 { /*
 	if (Interfaces::Engine()->IsInGame() && Stage == ClientFrameStage_t::FRAME_RENDER_START)
@@ -242,62 +242,89 @@ void CMisc::OnPlaySound(const char* pszSoundName) {
 	}
 }
 
+//orig third person (Framestagenotify)
+/* /*
+	if (Interfaces::Engine()->IsInGame() && Stage == ClientFrameStage_t::FRAME_RENDER_START)
+	{
+		CBaseEntity* localplayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntity(Interfaces::Engine()->GetLocalPlayer());
+		if (!localplayer)
+			return;
+
+		static QAngle vecAngles;
+		Interfaces::Engine()->GetViewAngles(vecAngles);
+		if (Settings::Misc::misc_ThirdPerson && !localplayer->IsDead() && Settings::Untrusted)
+		{
+			if (!Interfaces::Input()->m_fCameraInThirdPerson)
+				Interfaces::Input()->m_fCameraInThirdPerson = true;
+
+			Interfaces::Input()->m_vecCameraOffset = QAngle(vecAngles.x, vecAngles.y, Settings::Misc::misc_ThirdPersonRange);
+
+			*localplayer->GetVAngles() = Settings::Misc::qLastTickAngle;
+		}
+		else
+		{
+			if (Interfaces::Input()->m_fCameraInThirdPerson || localplayer->GetIsScoped())
+			{
+				Interfaces::Input()->m_fCameraInThirdPerson = false;
+				Interfaces::Input()->m_vecCameraOffset = QAngle(vecAngles.x, vecAngles.y, 0);
+			}
+		}
+	}*/
+
 void CMisc::OnOverrideView( CViewSetup * pSetup ) {
-
-	CBaseEntity* pPlayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntity(Interfaces::Engine()->GetLocalPlayer());
-	
-	if (!pPlayer)
-		return;
-
-	//thirdperson - thx spirthack/csgosimple! :D
-	if (Settings::Misc::misc_ThirdPerson && !pPlayer->IsDead()) {
-
-		if (!g_pInput->m_fCameraInThirdPerson) {
-			g_pInput->m_fCameraInThirdPerson = true;
-		}
-
-		float dist = Settings::Misc::misc_ThirdPersonRange;
-
-		QAngle *view = pPlayer->GetVAngles();
-		trace_t tr;
-		Ray_t ray;
-
-		Vector desiredCamOffset = Vector(cos((view->y)) * dist,
-			sin(DEG2RAD2(view->y)) * dist,
-			sin(DEG2RAD2(-view->x)) * dist
-		);
-
-		//cast a ray from the Current camera Origin to the Desired 3rd person Camera origin
-		ray.Init(pPlayer->GetEyePosition(), (pPlayer->GetEyePosition() - desiredCamOffset));
-		CTraceFilter traceFilter;
-		traceFilter.pSkip = pPlayer;
-		Interfaces::EngineTrace()->TraceRay(ray, MASK_SHOT, &traceFilter, &tr);
-
-		Vector diff = pPlayer->GetEyePosition() - tr.endpos;
-
-		float distance2D = sqrt(abs(diff.x * diff.x) + abs(diff.y * diff.y));// Pythagorean
-
-		bool horOK = distance2D > (dist - 2.0f);
-		bool vertOK = (abs(diff.z) - abs(desiredCamOffset.z) < 3.0f);
-
-		float cameraDistance;
-
-		if (horOK && vertOK) { // If we are clear of obstacles
-			cameraDistance = dist; // go ahead and set the distance to the setting
-		}
-		else {
-			if (vertOK) { // if the Vertical Axis is OK
-				cameraDistance = distance2D * 0.95f;
+	//thirdperson :D
+	if(Interfaces::Engine()->IsInGame()) {
+		CBaseEntity* localplayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntity(Interfaces::Engine()->GetLocalPlayer());
+		if(localplayer && !localplayer->IsDead() && Settings::Misc::misc_ThirdPerson && Settings::Untrusted) {
+			if(!Interfaces::Input()->m_fCameraInThirdPerson) {
+				Interfaces::Input()->m_fCameraInThirdPerson = true;
 			}
-			else { // otherwise we need to move closer to not go into the floor/ceiling
-				cameraDistance = abs(diff.z) * 0.95f;
+
+			float dist = Settings::Misc::misc_ThirdPersonRange;
+
+			QAngle *view = localplayer->GetVAngles();
+			trace_t tr;
+			Ray_t ray;
+
+			Vector desiredCamOffset = Vector(cos((view->y)) * dist,
+				sin(DEG2RAD2(view->y)) * dist,
+				sin(DEG2RAD2(-view->x)) * dist
+			);
+
+			//cast a ray from the Current camera Origin to the Desired 3rd person Camera origin
+			ray.Init(localplayer->GetEyePosition(), (localplayer->GetEyePosition() - desiredCamOffset));
+			CTraceFilter traceFilter;
+			traceFilter.pSkip = localplayer;
+			Interfaces::EngineTrace()->TraceRay(ray, MASK_SHOT, &traceFilter, &tr);
+
+			Vector diff = localplayer->GetEyePosition() - tr.endpos;
+
+			float distance2D = sqrt(abs(diff.x * diff.x) + abs(diff.y * diff.y));// Pythagorean wtf
+
+			bool horOK = distance2D > (dist - 2.0f);
+			bool vertOK = (abs(diff.z) - abs(desiredCamOffset.z) < 3.0f);
+
+			float cameraDistance;
+
+			if(horOK && vertOK) { // If we are clear of obstacles
+				cameraDistance = dist; // go ahead and set the distance to the setting
+			}
+			else {
+				if(vertOK) { // if the Vertical Axis is OK
+					cameraDistance = distance2D * 0.95f;
+				}
+				else { // otherwise we need to move closer to not go into the floor/ceiling
+					cameraDistance = abs(diff.z) * 0.95f;
+				}
+			}
+			Interfaces::Input()->m_fCameraInThirdPerson = true;
+			Interfaces::Input()->m_vecCameraOffset.z = cameraDistance;
+		}
+		else { //if thirdperson disabled
+			if(Interfaces::Input()->m_fCameraInThirdPerson) {
+				Interfaces::Input()->m_fCameraInThirdPerson = false;
 			}
 		}
-		g_pInput->m_fCameraInThirdPerson = true;
-		g_pInput->m_vecCameraOffset.z = cameraDistance;
-	}
-	else {
-		g_pInput->m_fCameraInThirdPerson = false;
 	}
 
 	if (Settings::Misc::misc_FovChanger && !Interfaces::Engine()->IsTakingScreenshot()) {

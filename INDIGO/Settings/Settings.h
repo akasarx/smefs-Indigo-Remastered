@@ -138,8 +138,8 @@ namespace Settings
 		extern bool esp_Watermark;
 		extern bool esp_Name;
 		extern bool esp_Rank;
-		extern int esp_Health;
-		extern int esp_Armor;
+		extern int esp_Health; //"None", "Number Bottom", "Bar Bottom", "Bar Left"
+		extern int esp_Armor; //"None", "Number Bottom", "Bar Bottom", "Bar Right"
 		extern bool esp_Weapon;
 		extern bool esp_Ammo;
 		extern bool esp_Infoz;

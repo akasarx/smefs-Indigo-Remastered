@@ -1,13 +1,6 @@
 #pragma once
 
 namespace SDK {
-	namespace TABLE {
-		namespace convar {
-			enum {
-				getbool = 13
-			};
-		}
-	}
 	class ConVar {
 	public:
 		template<typename... Args>
@@ -40,8 +33,7 @@ namespace SDK {
 			return GetMethod<OriginalFn>(this, 13)(this);
 		}
 
-		//NOODLED DID IT
-		//for sv_cheats getbool hook :D 
+		//from sv_cheats getbool hook :D 
 		bool GetBool() {
 			using OriginalFn = bool(__thiscall*)(void*);
 			return GetMethod<OriginalFn>(this, 13)(this);
