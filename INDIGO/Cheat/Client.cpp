@@ -409,8 +409,9 @@ namespace Client
 				QAngle view;
 				Interfaces::Engine()->GetViewAngles(view);
 
-				if (bSendPacket)
+				if (bSendPacket) {
 					Settings::Misc::qLastTickAngle = pCmd->viewangles;
+				}
 
 				if (!bIsGuiVisible)
 				{

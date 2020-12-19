@@ -87,14 +87,17 @@ namespace SDK
 		int			m_EdgeBlur; // 0x148
 	};
 
-	namespace TABLE
-	{
-		namespace IClientMode
-		{
-			enum
-			{
-				OverrideView = 18 ,
-				CreateMove = 24 ,
+	namespace TABLE {
+		namespace IClientMode {
+			enum {
+				CreateMove = 24,
+				DrawModelExecute = 21,
+				EmitSound = 5,
+				LockCursor = 67,
+				OnDisconnectFromServer = 25,
+				OnScreenSizeChanged = 116,
+				OverrideView = 18,
+				PaintTraverse = 41,
 				GetViewModelFOV = 35,
 				DoPostScreenSpaceEffects = 44
 			};
