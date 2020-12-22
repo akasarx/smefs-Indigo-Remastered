@@ -74,6 +74,7 @@ vfunc_hook::~vfunc_hook() {
 		delete[] new_vftb1;
 }
 
+//InitTable
 bool vfunc_hook::setup(void* base, const char * moduleName) {
 	if(base != nullptr)
 		class_base = base;
@@ -138,4 +139,41 @@ std::size_t vfunc_hook::estimate_vftbl_length(std::uintptr_t* vftbl_start) {
 	while(memInfo.Protect == PAGE_EXECUTE_READ || memInfo.Protect == PAGE_EXECUTE_READWRITE);
 
 	return m_nSize;
+}
+
+
+//let's give it a try, since there are incompatability problems that i really
+//cant be fucking bothered to try to fix, do it yourself if you want
+
+//list of variables from new csx_hook.h
+/*
+void*           class_base; //same as pPtrPtrTable, rest are obvious
+std::size_t     vftbl_len;
+std::uintptr_t* new_vftb1;
+std::uintptr_t* old_vftbl;
+LPCVOID         search_base = nullptr;
+bool wasAllocated = false;
+*/
+
+//list of variablies from old csx_hook.h
+/*
+PVOID* pPtrPtrTable;
+PVOID* pPtrOldTable;
+PVOID* pPtrNewTable;
+DWORD dwCountFunc;
+DWORD dwSizeTable;
+*/
+
+//i hate title case, but i hate redoing things even more
+void vfunc_hook::UnHook() {
+	if(!CSX::Utils::IsBadReadPtr(class_base)) {
+		*(PDWORD)class_base = (DWORD)old_vftbl;
+	}
+}
+
+void vfunc_hook::ReHook() {
+	if(!CSX::Utils::IsBadReadPtr(class_base)) {
+		*(PDWORD)class_base = (DWORD)new_vftb1; 
+		//it's a 1 instead of a L what the fuck lol
+	}
 }

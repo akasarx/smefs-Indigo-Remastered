@@ -56,8 +56,9 @@ namespace Engine {
 			return Reset_o(pDevice, pPresentationParameters);
 		}
 
+		/* //shouldn't be needed anymore?
 		//original iclientmode::createmove
-		/*bool cm;
+		bool cm;
 		void __stdcall Hook_CreateMove(float flInputSampleTime, CUserCmd* pCmd) {
 #if ENABLE_DEBUG_FILE == 1
 			if (!cm) {
@@ -67,7 +68,7 @@ namespace Engine {
 #endif
 			static auto ofunc = clientmode.get_original<CreateMove>(TABLE::IClientMode::CreateMove);
 			ofunc(Interfaces::ClientMode(), flInputSampleTime, pCmd);
-			Client::OnCreateMove(pCmd);
+			//Client::OnCreateMove(pCmd);
 		}*/
 
 		//ibaseclientdll::createmove
@@ -83,7 +84,6 @@ namespace Engine {
 			static auto ofunc = client.get_original<CHLCreateMove>(TABLE::IBaseClientDLL::CreateMove);
 			ofunc(Interfaces::Client(), sequence_number, input_sample_frametime, active);
 
-			//thanks to sprthack/csgosimple
 			CUserCmd* pCmd = Interfaces::Input()->GetUserCmd(sequence_number);
 
 			if(!pCmd || pCmd->command_number) {
@@ -99,20 +99,18 @@ namespace Engine {
 			Client::OnCreateMove(pCmd, bSendPacket);
 		}
 
-		__declspec(naked) void __stdcall CHLCreateMove_Proxy(int sequence_number, float input_sample_frametime, bool active) {
+		__declspec(naked) void __fastcall CHLCreateMove_Proxy(void* _this, int, int sequence_number, float input_sample_frametime, bool active) {
 			__asm {
 				push ebp
 				mov  ebp, esp
 				push ebx
-				lea  ecx, [esp]
-				push ecx
+				push esp
 				push dword ptr[active]
 				push dword ptr[input_sample_frametime]
 				push dword ptr[sequence_number]
-				call Hook::Hook_CHLCreateMove
+				call Hook_CHLCreateMove
 				pop  ebx
 				pop  ebp
-				retn 0Ch
 				retn 0Ch
 			}
 		}
@@ -163,50 +161,53 @@ namespace Engine {
 			ofunc(Interfaces::Client(), pSetup);
 		}
 
-		//DUNNO ABOUT THIS
-		bool gvm;
+		bool gvm; //gvm
 		float WINAPI Hook_GetViewModelFOV() {
 #if ENABLE_DEBUG_FILE == 1
-			if (!gvm) {
-				CSX::Log::Add("[Hooked - GetViewModelFOV]");
+			if(!gvm) {
+				CSX::Log::Add("[Hooked - GetViewModelFOV]\n");
 				gvm = true;
 			}
 #endif
+			clientmode.UnHook();
 			float fov = Interfaces::ClientMode()->GetViewModelFOV();
+			clientmode.ReHook();
 			Client::OnGetViewModelFOV(fov);
 			return fov;
 		}
 
-		//DUNNO ABOUT THIS
 		bool rm;
 		EGCResults __fastcall Hook_RetrieveMessage(void* ecx, void* edx, uint32_t *punMsgType, void *pubDest, uint32_t cubDest, uint32_t *pcubMsgSize) {
 #if ENABLE_DEBUG_FILE == 1
-			if (!rm) {
-				CSX::Log::Add("\n[Hooked - RetrieveMessage]");
+			if(!rm) {
+				CSX::Log::Add("[Hooked - RetrieveMessage]");
 				rm = true;
 			}
 #endif
+			steam.UnHook();
 			EGCResults status = Interfaces::SteamGameCoordinator()->RetrieveMessage(punMsgType, pubDest, cubDest, pcubMsgSize);
-			if (status != k_EGCResultOK) {
+			steam.ReHook();
+			if(status != k_EGCResultOK) {
 				return status;
 			}
 			Client::OnRetrieveMessage(ecx, edx, punMsgType, pubDest, cubDest, pcubMsgSize);
 			return status;
 		}
 
-		//DUNNO ABOUT THIS
 		bool sm;
 		EGCResults __fastcall Hook_SendMessage(void* ecx, void* edx, uint32_t unMsgType, const void* pubData, uint32_t cubData) {
 #if ENABLE_DEBUG_FILE == 1
-			if (!sm) {
-				CSX::Log::Add("[Hooked - SendMessage]");
+			if(!sm) {
+				CSX::Log::Add("\n[Hooked - SendMessage]");
 				sm = true;
 			}
 #endif
 			uint32_t messageType = unMsgType & 0x7FFFFFFF;
 			void* pubDataMutable = const_cast<void*>(pubData);
 			Client::OnSendMessage(ecx, edx, unMsgType, pubData, cubData);
-			EGCResults status = Interfaces::SteamGameCoordinator()->SendMessage(unMsgType, pubData, cubData);
+			steam.UnHook();
+			EGCResults status = Interfaces::SteamGameCoordinator()->SendMessage(unMsgType, pubData, cubData); //access violitions IF YOU DARE!!!!
+			steam.ReHook();
 			return status;
 		}
 
@@ -227,21 +228,20 @@ namespace Engine {
 		}
 
 		bool fsn;
-		void __stdcall Hook_FrameStageNotify(ClientFrameStage_t stage) {
+		void WINAPI Hook_FrameStageNotify(ClientFrameStage_t Stage) {
 #if ENABLE_DEBUG_FILE == 1
 			if(!fsn) {
 				CSX::Log::Add("[Hooked - FrameStageNotify]");
 				fsn = true;
 			}
 #endif
-			static auto ofunc = client.get_original<FrameStageNotify>(TABLE::IBaseClientDLL::FrameStageNotify);
-			ofunc(Interfaces::Client(), stage);
-			Interfaces::Client()->FrameStageNotify(stage);
+			Client::OnFrameStageNotify(Stage);
+			client.UnHook();
+			Interfaces::Client()->FrameStageNotify(Stage); //fuck you
+			client.ReHook();
 		}
 		
-		//broken and useless vmt or not so might as well comment out
-		//fix if you want
-		/*
+	    //?
 		bool es1;
 		int WINAPI Hook_EmitSound1(IRecipientFilter& filter, int iEntIndex, int iChannel, const char *pSoundEntry, unsigned int nSoundEntryHash, const char *pSample,
 			float flVolume, soundlevel_t iSoundlevel, int nSeed, int iFlags = 0, int iPitch = PITCH_NORM,
@@ -262,62 +262,63 @@ namespace Engine {
 				pOrigin, pDirection, pUtlVecOrigins, bUpdatePositions, soundtime, speakerentity);
 			sound.ReHook();
 			return ret;
-		}*/
+		}
 
-		//DUNNO ABOUT THIS
 		bool es2;
 		int WINAPI Hook_EmitSound2(IRecipientFilter& filter, int iEntIndex, int iChannel, const char *pSoundEntry, unsigned int nSoundEntryHash, const char *pSample,
 			float flVolume, float flAttenuation, int nSeed, int iFlags = 0, int iPitch = PITCH_NORM,
-			const Vector *pOrigin = NULL, const Vector *pDirection = NULL, CUtlVector< Vector >* pUtlVecOrigins = NULL, bool bUpdatePositions = true, float soundtime = 0.0f, int speakerentity = -1, int unklown = 0)
-		{
+			const Vector *pOrigin = NULL, const Vector *pDirection = NULL, CUtlVector< Vector >* pUtlVecOrigins = NULL, bool bUpdatePositions = true, float soundtime = 0.0f, int speakerentity = -1, int unklown = 0) {
 #if ENABLE_DEBUG_FILE == 1
-			if (!es2) {
-				CSX::Log::Add("[Hooked - EmitSound2]\n");
+			if(!es2) {
+				CSX::Log::Add("\n[Hooked - EmitSound2]\n");
 				es2 = true;
 			}
 #endif
-			if (pSample) {
+			if(pSample) {
 				Client::OnPlaySound(pOrigin, pSample);
 			}
+			sound.UnHook();
 			int ret = Interfaces::Sound()->EmitSound2(filter, iEntIndex, iChannel, pSoundEntry, nSoundEntryHash, pSample,
 				flVolume, flAttenuation, nSeed, iFlags, iPitch,
 				pOrigin, pDirection, pUtlVecOrigins, bUpdatePositions, soundtime, speakerentity);
+			sound.ReHook();
 			return ret;
 		}
 
-		//DUNNO ABOUT THIS
 		bool dme;
 		void WINAPI Hook_DrawModelExecute(IMatRenderContext* ctx, const DrawModelState_t &state,
-			const ModelRenderInfo_t &pInfo, matrix3x4_t *pCustomBoneToWorld = NULL)
-		{
+			const ModelRenderInfo_t &pInfo, matrix3x4_t *pCustomBoneToWorld = NULL) {
 #if ENABLE_DEBUG_FILE == 1
-			if (!dme) {
+			if(!dme) {
 				CSX::Log::Add("[Hooked - DrawModelExecute]\n");
 				dme = true;
 			}
 #endif
-			if (ctx && pCustomBoneToWorld) {
+			modelrender.UnHook();
+			if(ctx && pCustomBoneToWorld) {
 				Client::OnDrawModelExecute(ctx, state, pInfo, pCustomBoneToWorld);
 			}
 			Interfaces::ModelRender()->DrawModelExecute(ctx, state, pInfo, pCustomBoneToWorld);
-			if (ctx && pCustomBoneToWorld && Client::g_pEsp && Settings::Esp::esp_Chams) {
+			if(ctx && pCustomBoneToWorld && Client::g_pEsp && Settings::Esp::esp_Chams) {
 				Interfaces::ModelRender()->ForcedMaterialOverride(0);
 			}
+			modelrender.ReHook();
 		}
 
-		//DUNNO ABOUT THIS
 		bool plays;
 		void WINAPI Hook_PlaySound(const char* pszSoundName) {
 #if ENABLE_DEBUG_FILE == 1
-			if (!plays) {
+			if(!plays) {
 				CSX::Log::Add("\n[Hooked - PlaySound]\n");
 				plays = true;
 			}
 #endif
-			if (pszSoundName) {
+			surface.UnHook();
+			if(pszSoundName) {
 				Client::OnPlaySound(pszSoundName);
 			}
 			Interfaces::Surface()->PlaySound(pszSoundName);
+			surface.ReHook();
 		}
 
 		bool lc;
@@ -347,15 +348,21 @@ namespace Engine {
 			//This is the return address of GetBool_SVCheats
 			//static DWORD CAM_THINK
 
-			//19th october 2020
-			static DWORD CAM_THINK = CSX::Memory::FindPattern(CLIENT_DLL, "55 8B EC 83 E4 F8 83 EC 34 53 8B 5D 0C 89", 0) + 0x1;
+
+			/*SCROLL TO THE FUCKING BOTTOM. RETURN ADDR IS THE "HOOK". KILL ME KILL ME KILL ME*/
+
+			//21 dec 2020 - i cant be fucked, i want to fucking die FUCK THIS SHIT AND FUCK THIS LONG ASS FUNCTION
+			//VALVE DO YOU KNOW THE PAIN OF HAVING TO SCROLL ALL THE WAY DOWN TO THE ABYSS, THEN MANAGE TO CREATE A SIG????!??!?!?!?!?!?!?!?! FUCK YOU VALVE.
+
+			//JUST TO SPITE ANYONE WHO READS THIS, LOOK AT  THIS BEAUTIFUL MASTERPIECE OF A SIGNATURE. AND NO I WONT BOTHER TO MAKE IT SMALLER. IF YOU ASK I SHALL SIG THE ENTIRE FUCKING DLL FOR THIS ONE FUNCTION JUST TO SPITE THIS SHIT GAME. FUCK THIS. IF THIS DOESN'T WORK I'M ACTUALLY DONE. IM GOING TO SLEEP. FUCK THIS.
+			static DWORD CAM_THINK = CSX::Memory::FindPattern(CLIENT_DLL, "F3 0F 10 44 24 ? F3 0F 11 86 ? ? ? ? F3 0F 10 44 24 ? F3 0F 11 86 ? ? ? ? F3 0F 10 44 24 ? F3 0F 11 86 ? ? ? ? 5F 5E 8B E5 5D C3", 0) + 0x2F;
 #if ENABLE_DEBUG_FILE == 1
 			if(!svinit) {
 				CSX::Log::Add("[FindPattern/Hooked - GetBool_SVCheats = %X]", CAM_THINK);
 				svinit = true;
 			}
 #endif
-			//pConvar is the same as FindVar("sv_cheats") btw afaik
+			//:(
 			if(!pConvar) {
 				return false;
 			}
@@ -381,7 +388,7 @@ namespace Engine {
 				return GetMethod<OriginalFn>(this, 13)(this);
 			}*/ //this is Convar
 
-			//make sure returning original function (GetBool), not the convar!
+			//make sure returning original function return addr (GetBool), not the convar!
 			static auto ofunc = sv_cheats.get_original<GetBool_t>(13);
 #if ENABLE_DEBUG_FILE == 1
 			if(!svofunc) {
@@ -460,7 +467,7 @@ namespace Engine {
 #endif
 						return false;
 					}
-					client.hook_index(TABLE::IBaseClientDLL::FrameStageNotify, Hook_FrameStageNotify);
+					client.hook_index(TABLE::IBaseClientDLL::FrameStageNotify, Hook_FrameStageNotify); //NO.
 					client.hook_index(TABLE::IBaseClientDLL::CreateMove, CHLCreateMove_Proxy);
 
 					//clientmode
@@ -470,8 +477,7 @@ namespace Engine {
 #endif
 						return false;
 					}
-					//not needed anymore
-					//clientmode.hook_index(TABLE::IClientMode::CreateMove, Hook_CreateMove);
+					//clientmode.hook_index(TABLE::IClientMode::CreateMove, Hook_CreateMove); //not needed?
 					clientmode.hook_index(TABLE::IClientMode::OverrideView, Hook_OverrideView);
 					clientmode.hook_index(TABLE::IClientMode::GetViewModelFOV, Hook_GetViewModelFOV);
 					clientmode.hook_index(TABLE::IClientMode::DoPostScreenSpaceEffects, Hook_DoPostScreenSpaceEffects);
@@ -512,6 +518,7 @@ namespace Engine {
 					}
 					sv_cheats.hook_index(13, Hook_GetBool_SVCheats);
 					
+
 					//steamgamecoordinator
 					if (!steam.setup(Interfaces::SteamGameCoordinator())) {
 #if ENABLE_DEBUG_FILE == 1

@@ -591,8 +591,9 @@ void CMisc::Glow::Run() {
 
 			//color = is_enemy ? g_Options.color_glow_enemy : g_Options.color_glow_ally;
 
-			break;
-		} //remove all below this if you want the default asis indigo glow
+			
+		}break;
+		//remove all below this if you want the default asis indigo glow
 		/*case (int)CLIENT_CLASS_ID::CChicken: {
 			if(!g_Options.glow_chickens) { //settings -> glow_chickens
 				continue;

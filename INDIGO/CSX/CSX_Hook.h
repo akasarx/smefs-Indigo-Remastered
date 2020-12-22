@@ -56,11 +56,15 @@ public:
 		return (T)old_vftbl[index];
 	}
 
+	//let's give it a try! lol
+	void UnHook();
+	void ReHook();
+
 private:
 
 	static inline std::size_t estimate_vftbl_length(std::uintptr_t* vftbl_start);
 
-	void*           class_base;
+	void*           class_base; //same as pPtrPtrTable
 	std::size_t     vftbl_len;
 	std::uintptr_t* new_vftb1;
 	std::uintptr_t* old_vftbl;

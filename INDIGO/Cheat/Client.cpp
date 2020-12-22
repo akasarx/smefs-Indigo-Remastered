@@ -7,6 +7,10 @@
 /*WORKING:
 INV */
 
+/*ASSECCC VIOLITION ASSCIOSJ IHBYGQUGUION CJNCN BUCWBINCYUB8UCWXIIUBI INUXMIUNIBFCUNIEUIUBCINUIUCE CUNCIUEWUNUEIUN
+
+FUCK*/
+
 #include "Client.h"
 #include <ctime>
 
@@ -234,7 +238,13 @@ namespace Client
 		((uint32_t*)ptr)[1] = 0;
 
 		Message.SerializeToArray((void*)((DWORD)ptr + 8), Message.ByteSize());
-		bool result = Interfaces::SteamGameCoordinator()->SendMessage(k_EMsgGCClientHello | ((DWORD)1 << 31), ptr, Message.ByteSize() + 8) == k_EGCResultOK;
+
+		if(Message.ByteSize() != NULL) {
+			bool result = Interfaces::SteamGameCoordinator()->SendMessage(k_EMsgGCClientHello | ((DWORD)1 << 31), ptr, Message.ByteSize() + 8) == k_EGCResultOK;
+		}
+		else {
+			bool result = k_EGCResultInvalidMessage;
+		}
 
 		free(ptr);
 	}

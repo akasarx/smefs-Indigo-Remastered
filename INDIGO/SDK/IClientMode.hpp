@@ -119,7 +119,7 @@ namespace SDK
 		float GetViewModelFOV()
 		{
 			VirtualFn( float )( PVOID );
-			return GetMethod< OriginalFn >( this , TABLE::IClientMode::GetViewModelFOV )( this );
+			return GetMethod< OriginalFn >( this , TABLE::IClientMode::GetViewModelFOV )( this ); //access violation
 		}
 		bool DoPostScreenSpaceEffects(int callback)
 		{

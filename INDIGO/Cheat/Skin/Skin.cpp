@@ -258,7 +258,7 @@ void CSkin::InitalizeSkins()
 
 	for (ClientClass* pClass = Interfaces::Client()->GetAllClasses(); pClass; pClass = pClass->m_pNext)
 	{
-		if (!strcmp(pClass->m_pNetworkName, "CBaseViewModel"))
+		if (!strcmp(pClass->m_pNetworkName, "CBaseViewModel")) //what
 		{
 			RecvTable* pClassTable = pClass->m_pRecvTable;
 

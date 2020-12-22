@@ -10,6 +10,7 @@ using LockCursor_t = void(__thiscall*)(ISurface*);
 using OverrideView_t = void(__thiscall*)(void*, CViewSetup*);
 using GetBool_t = bool(__thiscall*)(void*);
 using DoPostScreenEffects_t = int(__thiscall*)(IClientMode*, int);
+using GetViewModel_t = float(__thiscall*)(void*);
 
 namespace Engine {
 	namespace Hook {
