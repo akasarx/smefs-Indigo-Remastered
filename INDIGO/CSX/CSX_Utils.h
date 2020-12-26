@@ -1,11 +1,10 @@
 #pragma once
-
 #include "CSX.h"
 
 namespace CSX {
 	namespace Utils {
-		//[swap_lines]
-				/* Wait dwMsec Load Module */
+//[swap_lines]
+		/* Wait dwMsec Load Module */
 		bool IsModuleLoad(PCHAR szModule, DWORD dwMsec = 5000);
 
 		/* Get Current Process Path */
@@ -33,11 +32,10 @@ namespace CSX {
 		BSTR ConvertStringToBSTR_UTF8(const char* szBuff);
 
 		std::string WstringToString(std::wstring wstr);
-
 		std::wstring StringToWstring(std::string str);
 
 		/* GetHackWorkingDirectory */
 		std::string GetHackWorkingDirectory();
-		//[/swap_lines]
+//[/swap_lines]
 	}
 }

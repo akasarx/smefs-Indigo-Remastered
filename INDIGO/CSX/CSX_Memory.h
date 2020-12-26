@@ -18,7 +18,7 @@ namespace CSX {
 		/* Code Style Use Mask \x8B\xFF\xFF\xFF\xFF x???? */
 		DWORD FindPattern(PCHAR pPattern, PCHAR pszMask, DWORD dwStart, DWORD dwEnd, DWORD dwOffset);
 		DWORD FindPattern(PCHAR szModule, PCHAR pPattern, PCHAR pszMask, DWORD dwOffset);
-
+		
 		/* Code Style No Use Mask \x55\x56\xFF\x00 */
 		DWORD FindPattern(PCHAR pPattern, DWORD dwPtLen, DWORD dwStart, DWORD dwEnd, DWORD dwOffset);
 		DWORD FindPattern(PCHAR szModule, PCHAR pPattern, DWORD dwPtLen, DWORD dwOffset);
