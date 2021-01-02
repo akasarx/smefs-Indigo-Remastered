@@ -219,13 +219,10 @@ namespace SDK
 		bool m_bIsUnderwater;
 	};
 
-	namespace TABLE
-	{
-		namespace IEngineSound
-		{
-			enum
-			{
-				EmitSound1 = 5 ,
+	namespace TABLE {
+		namespace IEngineSound {
+			enum {
+				EmitSound1 = 5,
 				EmitSound2 = 6
 			};
 		}

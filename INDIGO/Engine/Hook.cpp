@@ -97,7 +97,8 @@ namespace Engine {
 			return Reset_o(pDevice, pPresentationParameters);
 		}
 
-		bool lc;
+		//Non VMT version
+		/*bool lc;
 		void __stdcall Hook_LockCursor() {
 #if ENABLE_DEBUG_FILE == 1
 			if(!lc) {
@@ -111,6 +112,22 @@ namespace Engine {
 				return; //for some reason this works
 			}
 			ofunc(Interfaces::Surface());
+		}*/
+
+		bool lc;
+		void Hook_LockCursor() {
+#if ENABLE_DEBUG_FILE == 1
+			if(!lc) {
+				CSX::Log::Add("[Hooked - LockCursor]\n");
+				lc = true;
+			}
+#endif
+			surface.UnHook();
+			Interfaces::Surface()->LockCursor();
+			surface.ReHook();
+			if(bIsGuiVisible) {
+				Interfaces::Surface()->UnlockCursor();
+			}
 		}
 
 		//iclientmode::createmove
@@ -193,7 +210,8 @@ namespace Engine {
 			return ofunc(ecx, pEvent);
 		}
 
-		bool fsn;
+		//VMT Ver
+		/*bool fsn;
 		void WINAPI Hook_FrameStageNotify(ClientFrameStage_t Stage) {
 #if ENABLE_DEBUG_FILE == 1
 			if(!fsn) {
@@ -205,9 +223,23 @@ namespace Engine {
 			client.UnHook();
 			Interfaces::Client()->FrameStageNotify(Stage); //fuck you
 			client.ReHook();
+		}*/
+
+		bool fsn;
+		void __stdcall Hook_FrameStageNotify(ClientFrameStage_t stage) {
+#if ENABLE_DEBUG_FILE == 1
+			if(!fsn) {
+				CSX::Log::Add("[Hooked - FrameStageNotify]");
+				fsn = true;
+			}
+#endif
+			static auto ofunc = client.get_original<FrameStageNotify>(TABLE::IBaseClientDLL::FrameStageNotify);
+			ofunc(Interfaces::Client(), stage);
+		    Client::OnFrameStageNotify(stage);
 		}
 
-		bool orv; //third person :D
+
+		bool orv;
 		void __stdcall Hook_OverrideView(CViewSetup* pSetup) {
 #if ENABLE_DEBUG_FILE == 1
 			if(!orv) {
@@ -322,6 +354,7 @@ namespace Engine {
 			return Interfaces::Engine()->IsConnected();
 		}
 
+		
 		bool gvm; //gvm
 		float WINAPI Hook_GetViewModelFOV() {
 #if ENABLE_DEBUG_FILE == 1
@@ -336,6 +369,25 @@ namespace Engine {
 			Client::OnGetViewModelFOV(fov);
 			return fov;
 		}
+		
+
+		//Test - unfortunately fail
+		/*bool gvm; //gvm
+		float WINAPI Hook_GetViewModelFOV() {
+#if ENABLE_DEBUG_FILE == 1
+			if(!gvm) {
+				CSX::Log::Add("[Hooked - GetViewModelFOV]\n");
+				gvm = true;
+			}
+#endif
+			/*static auto ofunc = clientmode.get_original<GetViewModelFOV_t>(TABLE::IClientMode::GetViewModelFOV);
+			float fov = ofunc();*/
+			/*float fov = Interfaces::ClientMode()->GetViewModelFOV(); //FAIL, probably need to figure out how to get ofunc working properly
+			Client::OnGetViewModelFOV(fov);
+			return fov;
+		}*/
+
+
 
 		bool rm;
 		EGCResults __fastcall Hook_RetrieveMessage(void* ecx, void* edx, uint32_t *punMsgType, void *pubDest, uint32_t cubDest, uint32_t *pcubMsgSize) {
@@ -415,7 +467,7 @@ namespace Engine {
 			return ret;
 		}
 
-		bool dme;
+		/*bool dme;
 		void WINAPI Hook_DrawModelExecute(IMatRenderContext* ctx, const DrawModelState_t &state,
 			const ModelRenderInfo_t &pInfo, matrix3x4_t *pCustomBoneToWorld = NULL) {
 #if ENABLE_DEBUG_FILE == 1
@@ -433,6 +485,28 @@ namespace Engine {
 				Interfaces::ModelRender()->ForcedMaterialOverride(0);
 			}
 			modelrender.ReHook();
+		}*/
+
+		//test
+		bool dme;
+		void WINAPI Hook_DrawModelExecute(IMatRenderContext* ctx, const DrawModelState_t& state,
+			const ModelRenderInfo_t& pInfo, matrix3x4_t* pCustomBoneToWorld = NULL) {
+#if ENABLE_DEBUG_FILE == 1
+			if(!dme) {
+				CSX::Log::Add("[Hooked - DrawModelExecute]\n");
+				dme = true;
+			}
+#endif
+			static auto ofunc = modelrender.get_original<DrawModelExecute_t>(TABLE::IVModelRender::DrawModelExecute);
+
+			if(ctx && pCustomBoneToWorld) {
+				Client::OnDrawModelExecute(ctx, state, pInfo, pCustomBoneToWorld);
+			}
+			Interfaces::ModelRender()->DrawModelExecute(ctx, state, pInfo, pCustomBoneToWorld);
+			if(ctx && pCustomBoneToWorld && Client::g_pEsp && Settings::Esp::esp_Chams) {
+				Interfaces::ModelRender()->ForcedMaterialOverride(0);
+			}
+			ofunc(ctx, state, pInfo, *pCustomBoneToWorld);
 		}
 
 		bool plays;
@@ -450,6 +524,22 @@ namespace Engine {
 			Interfaces::Surface()->PlaySound(pszSoundName);
 			surface.ReHook();
 		}
+
+		//Test - FAIL
+		/*bool plays;
+		void WINAPI Hook_PlaySound(const char* pszSoundName) {
+#if ENABLE_DEBUG_FILE == 1
+			if(!plays) {
+				CSX::Log::Add("\n[Hooked - PlaySound]\n");
+				plays = true;
+			}
+#endif
+			static auto ofunc = surface.get_original<PlaySound_t>(TABLE::ISurface::PlaySound);
+			if(pszSoundName) {
+				Client::OnPlaySound(pszSoundName);
+			}
+			ofunc(pszSoundName);
+		}*/
 
 		bool Initialize() {
 			if(!CSX::Utils::IsModuleLoad(D3D9_DLL)) {
@@ -501,40 +591,41 @@ namespace Engine {
 					device.hook_index(D3D9::TABLE::Reset, Hook_Reset);
 					Reset_o = (Reset_t)device.get_original<ResetHook>(D3D9::TABLE::Reset);
 
-					//surface
-					if(!surface.InitTable(Interfaces::Surface(), false, VGUIMT_DLL)) {
+					//surface - test #3 fail, VMT ENABLED
+					if(!surface.InitTable(Interfaces::Surface(), true)) { //, VGUIMT_DLL))
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[Surface - failed to init!]");
 #endif
 						return false;
 					}
-					surface.hook_index(TABLE::ISurface::PlaySound, Hook_PlaySound);
-					surface.hook_index(TABLE::ISurface::LockCursor, Hook_LockCursor);
+					//VGUIMATSURFACE ERROR
+					//surface.hook_index(TABLE::ISurface::PlaySound, Hook_PlaySound); //TODO: Fix ofunc and can use it all
+					surface.hook_index(TABLE::ISurface::LockCursor, Hook_LockCursor); //Fine :)
 
-					//client
+					//client - VMT Disabled
 					if(!client.InitTable(Interfaces::Client(), false, CLIENT_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[Client - failed to init!]");
 #endif
 						return false;
 					}
-					client.hook_index(TABLE::IBaseClientDLL::CreateMove, CHLCreateMove_Proxy);
-					client.hook_index(TABLE::IBaseClientDLL::FrameStageNotify, Hook_FrameStageNotify);
+					client.hook_index(TABLE::IBaseClientDLL::CreateMove, CHLCreateMove_Proxy); //Fine :)
+					client.hook_index(TABLE::IBaseClientDLL::FrameStageNotify, Hook_FrameStageNotify); //Fine :)
 
-					//clientmode
-					if(!clientmode.InitTable(Interfaces::ClientMode(), true, CLIENT_DLL)) {
+					//clientmode - ???? TEST - VMT DISABLED
+					if(!clientmode.InitTable(Interfaces::ClientMode(), false, CLIENT_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[Clientmode - failed to init!]");
 #endif
 						return false;
 					}
-					clientmode.hook_index(TABLE::IClientMode::CreateMove, Hook_CreateMove); //uwu
-					clientmode.hook_index(TABLE::IClientMode::OverrideView, Hook_OverrideView);
-					clientmode.hook_index(TABLE::IClientMode::GetViewModelFOV, Hook_GetViewModelFOV);
-					clientmode.hook_index(TABLE::IClientMode::DoPostScreenSpaceEffects, Hook_DoPostScreenSpaceEffects);
+					clientmode.hook_index(TABLE::IClientMode::CreateMove, Hook_CreateMove); //Fine :)
+					clientmode.hook_index(TABLE::IClientMode::OverrideView, Hook_OverrideView); //Fine :)
+					clientmode.hook_index(TABLE::IClientMode::GetViewModelFOV, Hook_GetViewModelFOV); // IDK LOL
+					clientmode.hook_index(TABLE::IClientMode::DoPostScreenSpaceEffects, Hook_DoPostScreenSpaceEffects); //Fine :)
 
-					//eventmanager
-					if(!eventmanager.InitTable(Interfaces::GameEvent(), true, ENGINE_DLL)) {
+					//eventmanager - VMT DISABLED
+					if(!eventmanager.InitTable(Interfaces::GameEvent(), false, ENGINE_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[EventManager - failed to init!]");
 #endif
@@ -542,16 +633,16 @@ namespace Engine {
 					}
 					eventmanager.hook_index(TABLE::IGameEventManager2::FireEventClientSide, Hook_FireEventClientSideThink);
 
-					//sound
+					//sound - VMT ENABLED - TODO 
 					if(!sound.InitTable(Interfaces::Sound(), true, ENGINE_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[Sound - failed to init!]");
 #endif
 						return false;
 					}
-					sound.hook_index(TABLE::IEngineSound::EmitSound2, Hook_EmitSound2);
+					sound.hook_index(TABLE::IEngineSound::EmitSound2, Hook_EmitSound2); //:(
 
-					//modelrender
+					//modelrender - TEST!!! - VMT DISABLED
 					if(!modelrender.InitTable(Interfaces::ModelRender(), false, ENGINE_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[ModelRender - failed to init!]");
@@ -560,14 +651,14 @@ namespace Engine {
 					}
 					modelrender.hook_index(TABLE::IVModelRender::DrawModelExecute, Hook_DrawModelExecute);
 
-					//sv_cheats
-					if(!sv_cheats.InitTable(Interfaces::GetConVar()->FindVar("sv_cheats"), false)) { //, CLIENT_DLL)) { //crash on exit if use other hook - TODO uwu
+					//sv_cheats - crash on exit if use module hook - TODO uwu
+					if(!sv_cheats.InitTable(Interfaces::GetConVar()->FindVar("sv_cheats")), false) { // CLIENT_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[GetBool_SVCheats - failed to init!]");
 #endif
 						return false;
 					}
-					sv_cheats.hook_index(13, Hook_GetBool_SVCheats);
+					sv_cheats.hook_index(13, Hook_GetBool_SVCheats); //okay -_-
 
 
 					//steamgamecoordinator - VMT hook
@@ -577,9 +668,9 @@ namespace Engine {
 #endif
 						return false;
 					}
-					steam.hook_index(0, Hook_SendMessage);
-					steam.hook_index(2, Hook_RetrieveMessage);
-
+					/*steam.hook_index(0, Hook_SendMessage); //:(
+					steam.hook_index(2, Hook_RetrieveMessage); //:(
+					*///FUCK YOU STEAM TODO FIX THIS SHIT TOO
 					//all done
 					if(Client::Initialize(g_pDevice)) {
 #if ENABLE_DEBUG_FILE == 1

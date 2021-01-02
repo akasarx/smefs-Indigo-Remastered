@@ -24,8 +24,8 @@ namespace CSX {
 		return (table_dst < reinterpret_cast<std::uintptr_t>(module_base) || table_dst > module_end);
 	}
 
-	//OG Indigo VMT Hooking
-	PVOID Hook::WriteVMTTable(PVOID pTablePtr, PVOID pFuncAddress, DWORD dwIndex) {
+	//Indigo VMT Hooking
+	PVOID Hook::VMT_WriteTable(PVOID pTablePtr, PVOID pFuncAddress, DWORD dwIndex) {
 		if(IsBadReadPtr(pTablePtr, sizeof(PVOID)))
 			return nullptr;
 
@@ -47,24 +47,22 @@ namespace CSX {
 		return Func_o;
 	}
 
-	//OG Indigo VMT Hooking
-	bool Hook::InitVMTTable(PVOID pTablePtrPtr) {
+	//Indigo VMT Hooking - you sure love your PVOIDs, don't you lol
+	bool Hook::VMT_InitTable(PVOID pTablePtrPtr) {
 		if(IsBadReadPtr(pTablePtrPtr, sizeof(PVOID)))
 			return false;
 
-		class_base = (PVOID*)pTablePtrPtr;
-		old_vftbl = (PVOID*)(*(PDWORD)class_base);
+		class_base = (PVOID)pTablePtrPtr; //(PVOID*)pTablePtrPtr;
+		old_vftbl = (std::uintptr_t*)(*(PDWORD)class_base); //(PVOID*)
 
-		while(!CSX::Utils::IsBadReadPtr(old_vftbl[dwCountFunc]))
-			dwCountFunc++;
-
-		//while ( !IsBadCodePtr( (FARPROC)old_vftbl[dwCountFunc] ) && !CSX::Utils::IsBadReadPtr( old_vftbl[dwCountFunc] ) )
-		//	dwCountFunc++;
+		while(!CSX::Utils::IsBadReadPtr((std::uintptr_t*)old_vftbl[dwCountFunc]))
+			dwCountFunc++; //(no cast)
 
 		if(dwCountFunc) {
 			vftbl_len = sizeof(PVOID) * dwCountFunc;
 
-			new_vftbl = (PVOID*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, vftbl_len);
+			//(PVOID*)
+			new_vftbl = (std::uintptr_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, vftbl_len);
 			memcpy(new_vftbl, old_vftbl, vftbl_len);
 
 			*(PDWORD)class_base = (DWORD)new_vftbl;
@@ -74,13 +72,13 @@ namespace CSX {
 		return false;
 	}
 
-	//OG Indigo VMT Hooking
-	void Hook::HookIndex(DWORD dwIndex, PVOID pNewAddress) {
+	//Indigo VMT Hooking
+	void Hook::VMT_HookIndex(DWORD dwIndex, PVOID pNewAddress) {
 		if(new_vftbl)
 			((PVOID*)new_vftbl)[dwIndex] = pNewAddress;
 	}
 
-	//OG Indigo VMT Hooking
+	//Indigo - but pretty much same as get_original but with cast
 	PVOID Hook::GetFuncAddress(DWORD dwIndex) {
 		if(old_vftbl) {
 			PVOID pAddres = ((PVOID*)old_vftbl)[dwIndex];
@@ -90,8 +88,8 @@ namespace CSX {
 		return nullptr;
 	}
 
-	//OG Indigo VMT Hooking
-	PVOID Hook::GetHookIndex(DWORD dwIndex, PVOID pNewAddress) {
+	//Indigo VMT Hooking
+	PVOID Hook::VMT_GetHookIndex(DWORD dwIndex, PVOID pNewAddress) {
 		if(new_vftbl) {
 			PVOID pOld = ((PVOID*)new_vftbl)[dwIndex];
 			((PVOID*)new_vftbl)[dwIndex] = pNewAddress;
@@ -100,21 +98,20 @@ namespace CSX {
 		return nullptr;
 	}
 
-	//OG Indigo VMT Hooking
+	//Indigo VMT Hooking
 	void Hook::UnHook() {
 		if(!CSX::Utils::IsBadReadPtr(class_base))
 			*(PDWORD)class_base = (DWORD)old_vftbl;
 	}
 
-	//OG Indigo VMT Hooking
+	//Indigo VMT Hooking
 	void Hook::ReHook() {
 		if(!CSX::Utils::IsBadReadPtr(class_base))
 			*(PDWORD)class_base = (DWORD)new_vftbl;
 	}
 	
-	//uintptr_t* vfunc_hook::search_free_data_page(const char* module_name, const std::size_t vmt_size)
-	PVOID* Hook::search_free_data_page(const char* module_name, const DWORD vmt_size) { /*Modified code from exphck https://www.unknowncheats.me/forum/2128832-post43.html */
-		auto check_data_section = [&](LPCVOID address, const DWORD vmt_size) {
+	uintptr_t* Hook::search_free_data_page(const char* module_name, const std::size_t vmt_size) { /*Modified code from exphck https://www.unknowncheats.me/forum/2128832-post43.html */
+		auto check_data_section = [&](LPCVOID address, const std::size_t vmt_size) {
 			const DWORD DataProtection = (PAGE_EXECUTE_READWRITE | PAGE_READWRITE);
 			MEMORY_BASIC_INFORMATION mbi = { 0 };
 
@@ -132,34 +129,29 @@ namespace CSX {
 		if(module_addr == nullptr)
 			return nullptr;
 
-		//TODO: GET RID OF REINTERPRET_CAST BS I HATE IT
 		const auto dos_header = reinterpret_cast<PIMAGE_DOS_HEADER> (module_addr);
-		const auto nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS> (reinterpret_cast<unsigned char*>(module_addr) + dos_header->e_lfanew);
-		//(reinterpret_cast<std::uint8_t*>(module_addr) + dos_header->e_lfanew);
+		const auto nt_headers = reinterpret_cast<PIMAGE_NT_HEADERS> (reinterpret_cast<std::uint8_t*>(module_addr) + dos_header->e_lfanew);
 
-		//const auto module_end = reinterpret_cast<std::uintptr_t>(module_addr)
-		const auto module_end = module_addr + nt_headers->OptionalHeader.SizeOfImage - sizeof(PVOID);
+		const auto module_end = reinterpret_cast<std::uintptr_t>(module_addr) + nt_headers->OptionalHeader.SizeOfImage - sizeof(std::uintptr_t);
 
-		//current_address = HMODULE
-		for(auto current_address = module_end; (DWORD)current_address > (DWORD)module_addr; current_address -= sizeof(PVOID)) {
-			if(*reinterpret_cast<PVOID*>(current_address) == 0 && check_data_section(reinterpret_cast<LPCVOID>(current_address), vmt_size)) {
+		for(auto current_address = module_end; current_address > (DWORD)module_addr; current_address -= sizeof(std::uintptr_t)) {
+			if(*reinterpret_cast<std::uintptr_t*>(current_address) == 0 && check_data_section(reinterpret_cast<LPCVOID>(current_address), vmt_size)) {
 				bool is_good_vmt = true;
 				auto page_count = 0u;
 
-				//(std::uintptr_t)),<std::uintptr_t*>
-				for(; page_count < vmt_size && is_good_vmt; page_count += sizeof(PVOID)) {
-					if(*reinterpret_cast<PVOID*>(current_address + page_count) != 0)
-						is_good_vmt = false; //TODO: reinterpret_bullshit<fuckoff>
+				for(; page_count < vmt_size && is_good_vmt; page_count += sizeof(std::uintptr_t)) {
+					if(*reinterpret_cast<std::uintptr_t*>(current_address + page_count) != 0)
+						is_good_vmt = false;
 				}
 
 				if(is_good_vmt && page_count >= vmt_size)
-					return (PVOID*)current_address; //hehehehe
+					return (uintptr_t*)current_address;
 			}
 		}
 		return nullptr;
 	}
 
-	//OG Indigo vars for ref
+	//Indigo vars for ref
 	/*Hook::Hook() {
 		class_base = nullptr; //pPtrPtrTable
 		old_vftbl = nullptr;
@@ -172,20 +164,21 @@ namespace CSX {
 	Hook::Hook() //vfunc_hook::vfunc_hook()
 		: class_base(nullptr), vftbl_len(0), new_vftbl(nullptr), old_vftbl(nullptr), dwCountFunc(0) { //dwCountFunc(0) - Indigo
 	}
-	Hook::Hook(PVOID base) //vfunc_hook::vfunc_hook(void* base)
+	Hook::Hook(void* base) //vfunc_hook::vfunc_hook(void* base)
 		: class_base(base), vftbl_len(0), new_vftbl(nullptr), old_vftbl(nullptr), dwCountFunc(0) { //dwCountFunc(0) - Indigo
 	}
 	Hook::~Hook() { //vfunc_hook::~vfunc_hook()
 		unhook_all();
+
 		if(wasAllocated) {
 			delete[] new_vftbl;
 		}
 	}
 
-	//vfunc_hook::setup(void* base, const char * moduleName) {
-	bool Hook::InitTable(PVOID base, bool VMT, const char* moduleName) {
+	//bool vfunc_hook::setup(void* base, const char* moduleName
+	bool Hook::InitTable(void* base /*= nullptr*/, bool VMT /*= false*/, const char* moduleName /*= nullptr*/) {
 		if(VMT) {
-			InitVMTTable(base); //:D
+			VMT_InitTable(base); //:D
 		}
 		else {
 			if(base != nullptr)
@@ -194,24 +187,23 @@ namespace CSX {
 			if(class_base == nullptr)
 				return false;
 
-			old_vftbl = *(PVOID**)class_base;
-			vftbl_len = estimate_vftbl_length(old_vftbl) * sizeof(PVOID);
+			old_vftbl = *(std::uintptr_t**)class_base;
+			vftbl_len = estimate_vftbl_length(old_vftbl) * sizeof(std::uintptr_t);
 
 			if(vftbl_len == 0)
 				return false;
 
-			if(moduleName) { // If provided a module name then we will find a place in that module
+			if(moduleName) { //if provided a module name then we will find a place in that module
 				new_vftbl = search_free_data_page(moduleName, vftbl_len + sizeof(std::uintptr_t));
-				std::memset(new_vftbl, NULL, vftbl_len + sizeof(PVOID));
+				std::memset(new_vftbl, NULL, vftbl_len + sizeof(std::uintptr_t));
 				std::memcpy(&new_vftbl[1], old_vftbl, vftbl_len);
-				new_vftbl[0] = old_vftbl[-1];
 				try {
-					auto guard = detail::protect_guard{ class_base, sizeof(PVOID), PAGE_READWRITE };
-
-					*(PVOID**)class_base = &new_vftbl[1];
+					auto guard = detail::protect_guard{ class_base, sizeof(std::uintptr_t), PAGE_READWRITE };
+					new_vftbl[0] = old_vftbl[-1];
+					*(std::uintptr_t**)class_base = &new_vftbl[1];
 					wasAllocated = false;
 					if(table_is_hooked(base, moduleName)) {
-						Beep(500, 500); //wat??
+						Beep(500, 500); //wat???
 					}
 				}
 				catch(...) {
@@ -219,13 +211,13 @@ namespace CSX {
 					return false;
 				}
 			}
-			else { // If not then we do "regular vmthooking"
-				new_vftbl = new PVOID[vftbl_len + 1]();
+			else { // else do "regular VMT hooking"
+				new_vftbl = new std::uintptr_t[vftbl_len + 1]();
 				std::memcpy(&new_vftbl[1], old_vftbl, vftbl_len);
 				try {
-					auto guard = detail::protect_guard{ class_base, sizeof(PVOID), PAGE_READWRITE };
+					auto guard = detail::protect_guard{ class_base, sizeof(std::uintptr_t), PAGE_READWRITE };
 					new_vftbl[0] = old_vftbl[-1];
-					*(PVOID**)class_base = &new_vftbl[1];
+					*(std::uintptr_t**)class_base = &new_vftbl[1];
 					wasAllocated = true;
 				}
 				catch(...) {
@@ -237,8 +229,7 @@ namespace CSX {
 		}
 	}
 
-	//std::size_t vfunc_hook::estimate_vftbl_length(std::uintptr_t* vftbl_start)
-	DWORD Hook::estimate_vftbl_length(PVOID* vftbl_start) {
+	std::size_t Hook::estimate_vftbl_length(std::uintptr_t* vftbl_start) {
 		MEMORY_BASIC_INFORMATION memInfo = { NULL };
 		int m_nSize = -1;
 		do {

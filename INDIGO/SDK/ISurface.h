@@ -6,14 +6,10 @@
 #undef PlaySound
 #endif
 
-namespace SDK
-{
-	namespace TABLE
-	{
-		namespace ISurface
-		{
-			enum
-			{
+namespace SDK {
+	namespace TABLE {
+		namespace ISurface {
+			enum {
 				DrawSetColor1 = 14,
 				DrawSetColor2 = 15,
 				DrawFilledRect = 16,
