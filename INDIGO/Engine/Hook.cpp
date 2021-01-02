@@ -13,16 +13,37 @@ namespace Engine {
 			We are NOT responsible for ANY bans that may occur during the process of using this cheat. This includes, but not limited to, VAC, Untrusted and
 			Overwatch bans.
 		*/
-		vfunc_hook device; //IDirect3DDevice9Table;
-		vfunc_hook surface; //ISurfaceTable
-		vfunc_hook client; //IBaseClientTable
-		vfunc_hook clientmode; //IClientModeTable;
-		vfunc_hook eventmanager; //IGameEventManagerTable
-		vfunc_hook sound;
-		vfunc_hook modelrender;
-		vfunc_hook sv_cheats; //convar lol
-		vfunc_hook engine;
-		vfunc_hook steam; //steamgamecoordinator
+
+		/*in for example if (!steam.setup(Interfaces::SteamGameCoordinator())
+		if you provide a module so it's like if (!steam.setup(Interfaces::SteamGameCoordinator(), STEAMAPI_DLL)), then it's not hooking with VMT, 
+		else it will use VMT*/
+
+		//From SDK.cpp
+		/*#define ENGINE_DLL "engine.dll"
+		#define CLIENT_DLL "client.dll"
+		#define MATERIAL_DLL "materialsystem.dll"
+		#define VGUIMT_DLL "vguimatsurface.dll"
+		#define VSTDLIB_DLL	"vstdlib.dll"
+		#define INPUTSYSTEM_DLL	"inputsystem.dll"
+		#define STEAMAPI_DLL "steam_api.dll"*/
+
+		//From Engine.h
+		/*#define VGUI2_DLL "vgui2.dll"
+		#define VGUIMAT_DLL	"vguimatsurface.dll"
+		#define D3D9_DLL "d3d9.dll"
+		#define SHADERPIDX9_DLL "shaderapidx9.dll"
+		#define GAMEOVERLAYRENDERER_DLL "GameOverlayRenderer.dll"*/
+
+		vfunc_hook device; //IDirect3DDevice9Table - 
+		vfunc_hook surface; //ISurfaceTable - VGUIMT_DLL ?
+		vfunc_hook client; //IBaseClientTable - CLIENT_DLL
+		vfunc_hook clientmode; //IClientModeTable - CLIENT_DLL
+		vfunc_hook eventmanager; //IGameEventManagerTable - ? ENGINE or client
+		vfunc_hook sound; //???
+		vfunc_hook modelrender; //??? IVModelRender - ENGINE
+		vfunc_hook sv_cheats; //convar - CLIENT_DLL
+		vfunc_hook engine; //engine - ENGINE_DLL
+		vfunc_hook steam; //steamgamecoordinator - STEAMAPI_DLL ?
 		IDirect3DDevice9* g_pDevice = nullptr;
 
 		typedef HRESULT(WINAPI* Present_t)(IDirect3DDevice9* pDevice, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
@@ -492,7 +513,7 @@ namespace Engine {
 					eventmanager.hook_index(TABLE::IGameEventManager2::FireEventClientSide, Hook_FireEventClientSideThink);
 					
 					//sound
-					if (!sound.setup(Interfaces::Sound())) {
+					if (!sound.setup(Interfaces::Sound(), ENGINE_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[Model - failed to init!]");
 #endif
@@ -510,7 +531,7 @@ namespace Engine {
 					modelrender.hook_index(TABLE::IVModelRender::DrawModelExecute, Hook_DrawModelExecute);
 					
 					//sv_cheats - test
-					if (!sv_cheats.setup(Interfaces::GetConVar()->FindVar("sv_cheats"))) {
+					if (!sv_cheats.setup(Interfaces::GetConVar()->FindVar("sv_cheats")), CLIENT_DLL) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[GetBool_SVCheats - failed to init!]");
 #endif
@@ -520,7 +541,7 @@ namespace Engine {
 					
 
 					//steamgamecoordinator
-					if (!steam.setup(Interfaces::SteamGameCoordinator())) {
+					if (!steam.setup(Interfaces::SteamGameCoordinator(), STEAMAPI_DLL)) {
 #if ENABLE_DEBUG_FILE == 1
 						CSX::Log::Add("\n[SteamGameCoordinator - failed to init!]");
 #endif
