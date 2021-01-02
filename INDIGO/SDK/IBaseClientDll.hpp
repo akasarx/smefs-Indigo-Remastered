@@ -8,18 +8,16 @@
 #include "ClientClass.hpp"
 #include "ButtonCode.h"
 
-namespace SDK
-{
+namespace SDK {
 	class bf_write;
 	class CEngineSprite;
 
-	namespace TABLE
-	{
-		namespace IBaseClientDLL
-		{
-			enum
-			{
-				FrameStageNotify = 37
+	namespace TABLE {
+		namespace IBaseClientDLL {
+			enum {
+				FrameStageNotify = 37,
+				DrawModelExecute = 21,
+				CreateMove = 22
 			};
 		}
 	}

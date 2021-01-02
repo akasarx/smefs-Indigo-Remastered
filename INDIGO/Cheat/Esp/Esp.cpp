@@ -5,6 +5,164 @@
 */
 
 #include "ESP.h"
+//LETS DO THIS!!!!!!!!
+
+//thx csgosimple :)
+visuals::Glow::Glow() {
+}
+
+visuals::Glow::~Glow() {
+	// We cannot call shutdown here unfortunately.
+	// Reason is not very straightforward but anyways:
+	// - This destructor will be called when the dll unloads
+	//   but it cannot distinguish between manual unload 
+	//   (pressing the Unload button or calling FreeLibrary)
+	//   or unload due to game exit.
+	//   What that means is that this destructor will be called
+	//   when the game exits.
+	// - When the game is exiting, other dlls might already 
+	//   have been unloaded before us, so it is not safe to 
+	//   access intermodular variables or functions.
+	//   
+	//   Trying to call Shutdown here will crash CSGO when it is
+	//   exiting (because we try to access g_GlowObjManager).
+	//
+}
+
+void visuals::Glow::Shutdown() {
+	// Remove glow from all entities
+	for(auto i = 0; i < g_GlowObjManager->m_GlowObjectDefinitions.Count(); i++) {
+		auto& glowObject = g_GlowObjManager->m_GlowObjectDefinitions[i];
+		auto entity = reinterpret_cast<CBaseEntity*>(glowObject.m_pEntity);
+
+		if(glowObject.IsUnused()) {
+			continue;
+		}
+
+		if(!entity || entity->IsDormant()) {
+			continue;
+		}
+
+		glowObject.m_flAlpha = 0.0f;
+	}
+}
+
+//original
+/*auto glow_target = [](GlowObjectDefinition_t& glowObject, Color color) -> void {
+				glowObject.m_flRed = color.r() / 255.f;
+				glowObject.m_flGreen = color.g() / 255.f;
+				glowObject.m_flBlue = color.b() / 255.f;
+				glowObject.m_flAlpha = color.a() / 255.f;
+				glowObject.m_bRenderWhenOccluded = true;
+				glowObject.m_bRenderWhenUnoccluded = false;
+			};
+			if (Interfaces::GlowManager && Interfaces::Engine()->IsConnected()) {
+				if (Settings::Esp::glow) {
+					for (auto i = 0; i < Interfaces::GlowManager()->m_GlowObjectDefinitions.Count(); i++) {
+						auto& glowObject = Interfaces::GlowManager()->m_GlowObjectDefinitions[i];
+						auto entity = reinterpret_cast<CBaseEntity*>(glowObject.m_pEntity);
+						if (!entity || glowObject.IsUnused()) {
+							continue;
+						}
+						switch (entity->GetClientClass()->m_ClassID) {
+							case (int)CLIENT_CLASS_ID::CCSPlayer: {
+								if (entity->GetTeam() != Client::g_pPlayers->GetLocal()->m_pEntity->GetTeam()) {
+									glow_target(glowObject, Color(255, 255, 255, 255));
+								}
+							}
+							break;
+							default:
+								break;
+						}
+					}
+				}
+			}*/
+
+void visuals::Glow::Run() {
+	auto glow_target = [](GlowObjectDefinition_t& glowObject, Color color) -> void {
+		glowObject.m_flRed = color.r() / 255.f;
+		glowObject.m_flGreen = color.g() / 255.f;
+		glowObject.m_flBlue = color.b() / 255.f;
+		glowObject.m_flAlpha = color.a() / 255.f;
+		glowObject.m_bRenderWhenOccluded = true;
+		glowObject.m_bRenderWhenUnoccluded = false;
+	};
+
+	for(auto i = 0; i < Interfaces::GlowManager()->m_GlowObjectDefinitions.Count(); i++) {
+		auto& glowObject = Interfaces::GlowManager()->m_GlowObjectDefinitions[i];
+		auto entity = reinterpret_cast<CBaseEntity*>(glowObject.m_pEntity);
+
+		if(glowObject.IsUnused()) {
+			continue;
+		}
+
+		if(!entity || entity->IsDormant()) {
+			continue;
+		}
+
+		//auto color = Color{};
+
+		switch(entity->GetClientClass()->m_ClassID) {
+		case (int)CLIENT_CLASS_ID::CCSPlayer:
+		{
+			//auto is_enemy = (entity->GetTeam() != Client::g_pPlayers->GetLocal()->m_pEntity->GetTeam());
+			if(entity->GetTeam() != Client::g_pPlayers->GetLocal()->m_pEntity->GetTeam()) {
+				glow_target(glowObject, Color(255, 255, 255, 255));
+			}
+			/*if (entity->HasC4() && is_enemy && g_Options.glow_c4_carrier) {
+				color = g_Options.color_glow_c4_carrier;
+				break;
+			}*/
+
+			/*if (/*!g_Options.glow_players || entity->IsDead())
+				continue;
+
+			/*if (!is_enemy && Settings::Esp::esp_Enemy)
+				continue;*/
+
+				//color = is_enemy ? g_Options.color_glow_enemy : g_Options.color_glow_ally;
+
+			break;
+		} //remove all below this if you want the default asis indigo glow
+		/*case (int)CLIENT_CLASS_ID::CChicken: {
+			if(!g_Options.glow_chickens) { //settings -> glow_chickens
+				continue;
+			}
+			entity->m_bShouldGlow() = true;
+			color = g_Options.color_glow_chickens; //dont have a setting for this
+			break;
+		}
+		case (int)CLIENT_CLASS_ID::CBaseAnimating: {
+			if(!g_Options.glow_defuse_kits) { //im guessing it's talking about defusing?
+				continue;
+			}
+			color = g_Options.color_glow_defuse; //dont have a setting for this
+			break;
+		}
+		case (int)CLIENT_CLASS_ID::CPlantedC4: { //im gonna guess this means -> BOMB PLANTED
+			if (!g_Options.glow_planted_c4) { //glow_planted_c4
+				continue;
+			}
+			color = g_Options.color_glow_planted_c4; //dont have a setting for this
+			break;
+		}
+		/*default: {
+			if (entity->IsWeapon()) {
+				if (!Settings::Esp::esp_Weapon) { //settings -> glow_weapons
+					continue;
+				}
+				color = g_Options.color_glow_weapons; //dont have a setting for this
+			}
+		}
+				 glowObject.m_flRed = color.r() / 255.0f;
+				 glowObject.m_flGreen = color.g() / 255.0f;
+				 glowObject.m_flBlue = color.b() / 255.0f;
+				 glowObject.m_flAlpha = color.a() / 255.0f;
+				 glowObject.m_bRenderWhenOccluded = true;
+				 glowObject.m_bRenderWhenUnoccluded = false;*/
+		}
+	}
+}
 
 using namespace Client;
 PlayerInfo GetInfo(int Index)

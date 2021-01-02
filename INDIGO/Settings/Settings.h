@@ -125,8 +125,7 @@ namespace Settings
 		//[/swap_lines]
 	}
 
-	namespace Esp
-	{
+	namespace Esp {
 		//[swap_lines]
 		extern int esp_Style; // 0 - Box 1 - CoalBox
 		extern int esp_Size;
@@ -213,15 +212,14 @@ namespace Settings
 		extern int knf_DistAttack2;
 	}
 
-	namespace Skin
-	{
+	namespace Skins {
 		//[swap_lines]
-		extern int knf_ct_model;
-		extern int knf_ct_skin;
-		extern int knf_tt_model;
-		extern int knf_tt_skin;
-		extern int gloves_model;
-		extern int gloves_skin;
+		extern int knife_t_type;
+		extern int knife_t_skin;
+		extern int knife_ct_type;
+		extern int knife_ct_skin;
+		extern int glove_type;
+		extern int glove_skin;
 		//[/swap_lines]
 	}
 
@@ -312,7 +310,8 @@ namespace Settings
 #define VISUAL_TEXT "Visuals"
 #define RADAR_TEXT "Radarhack"
 #define KNIFEBOT_TEXT "Knifebot"
-#define SKIN_TEXT "Skins"
+#define SKINS_SETTINGS_TEXT "Skins Settings"
+#define SKINS_TEXT "Skins"
 #define MISC_TEXT "Misc"
 #define PROFILE_TEXT "ProfileChanger"
 #define INVENTORY_TEXT "InventoryChanger"
@@ -404,6 +403,7 @@ namespace Settings
 #define CVAR_ESP_WORLDGRENADE "ESP_WorldGrenade"
 #define CVAR_ESP_BOXNADE "ESP_BoxNade"
 #define CVAR_ESP_DLIGHTZ "ESP_Dlightz"
+#define CVAR_ESP_GLOW "ESP_Glow"
 
 #define CVAR_ESP_COLOR_CT "ESP_Color_CT"
 #define CVAR_ESP_COLOR_TT "ESP_Color_TT"
@@ -447,11 +447,17 @@ namespace Settings
 #define CVAR_KNIFEBOT_DISTATTACK "knf_DistAttack"
 #define CVAR_KNIFEBOT_DISTATTACK2 "knf_DistAttack2"
 
-#define CVAR_SKIN_CT_MODEL "knf_ct_model"
-#define CVAR_SKIN_CT_SKIN "knf_ct_skin"
-#define CVAR_SKIN_TT_MODEL "knf_tt_model"
-#define CVAR_SKIN_TT_SKIN "knf_tt_skin"
-#define CVAR_SKIN_GLOVES "gloves_skin"
+#define CVAR_SKINS_CHANGER "skinschanger"
+#define CVAR_SKINS_KNIFE_CHANGER "knifechanger"
+
+#define CVAR_SKINS_T_TYPE "knife_t_type"
+#define CVAR_SKINS_T_SKIN "knife_t_skin"
+
+#define CVAR_SKINS_CT_TYPE "knife_ct_type"
+#define CVAR_SKINS_CT_SKIN "knife_ct_skin"
+
+#define CVAR_SKINS_GLOVE_TYPE "glove_type"
+#define CVAR_SKINS_GLOVE_SKIN "glove_skin"
 
 #define CVAR_MISC_MENU_COLOR "misc_MenuColor"
 #define CVAR_MISC_SKIN_CHANGER "misc_SkinChanger"

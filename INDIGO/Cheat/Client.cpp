@@ -331,51 +331,61 @@ namespace Client
 		g_pInventoryChanger->PreSendMessage(unMsgType, pubDataMutable, cubData);
 	}
 
-	void OnCreateMove(CUserCmd* pCmd, bool& bSendPacket)
-	{
-		if (g_pPlayers && Interfaces::Engine()->IsInGame())
-		{
+	//Absolute fucking meme XD
+	void OnCHLCreateMove(CUserCmd* pCmd, bool &bSendPacket) {
+		//bSendPacket = true; //XD ?? uwu
+		if(Interfaces::Engine()->IsInGame()) {
+			if(bSendPacket) {
+				Settings::Misc::qLastTickAngle = pCmd->viewangles;
+			}
+			if(Settings::Misc::misc_LegitAA) {
+				AntiAim().LegitAA(pCmd, bSendPacket);
+			}
+		}
+	}
+
+	//uwu
+	void OnCreateMove(CUserCmd* pCmd) { //uwu, bool &bSendPacket) {
+		if(g_pPlayers && Interfaces::Engine()->IsInGame()) {
 			g_pPlayers->Update();
 
-			if (g_pEsp)
+			if(g_pEsp)
 				g_pEsp->OnCreateMove(pCmd);
 
-			if (IsLocalAlive())
-			{
+			if(IsLocalAlive()) {
 				QAngle view;
 				Interfaces::Engine()->GetViewAngles(view);
 
-				if (bSendPacket)
-					Settings::Misc::qLastTickAngle = pCmd->viewangles;
+				/*if(bSendPacket)
+					Settings::Misc::qLastTickAngle = pCmd->viewangles;*/
 
-				if (!bIsGuiVisible)
-				{
+				if(!bIsGuiVisible) {
 					int iWeaponSettingsSelectID = GetWeaponSettingsSelectID();
 
-					if (iWeaponSettingsSelectID >= 0)
+					if(iWeaponSettingsSelectID >= 0)
 						iWeaponID = iWeaponSettingsSelectID;
 				}
 
-				if (g_pAimbot)
+				if(g_pAimbot)
 					g_pAimbot->OnCreateMove(pCmd, g_pPlayers->GetLocal());
 
-				if (g_pTriggerbot)
+				if(g_pTriggerbot)
 					g_pTriggerbot->OnCreateMove(pCmd, g_pPlayers->GetLocal());
 
-				if (g_pKnifebot)
+				if(g_pKnifebot)
 					g_pKnifebot->OnCreateMove(pCmd);
 
-				if (g_pMisc)
+				if(g_pMisc)
 					g_pMisc->OnCreateMove(pCmd);
 
-				if (Settings::Aimbot::aim_Backtrack)
+				if(Settings::Aimbot::aim_Backtrack)
 					backtracking->legitBackTrack(pCmd);
 
-				if (Settings::Misc::misc_LegitAA)
-					AntiAim().LegitAA(pCmd, bSendPacket);
+				/*if(Settings::Misc::misc_LegitAA)
+					AntiAim().LegitAA(pCmd, bSendPacket);*/
 
 				correct_movement(view, pCmd, pCmd->Move.x, pCmd->Move.y);
-				if (stub_68616b65) if (!sanitize_angles(pCmd->viewangles)) return;
+				if(stub_68616b65) if(!sanitize_angles(pCmd->viewangles)) return;
 				// did no one ever find this anti paste #2?
 			}
 		}
@@ -406,10 +416,9 @@ namespace Client
 		}
 	}
 
-	void OnFrameStageNotify(ClientFrameStage_t Stage)
-	{
-		if (Interfaces::Engine()->IsInGame() && Interfaces::Engine()->IsConnected())
-		{
+	void OnFrameStageNotify(ClientFrameStage_t Stage) {
+		if(Interfaces::Engine()->IsInGame() && Interfaces::Engine()->IsConnected()) {
+			/*//spoofing sv_cheats method - obv detected but here for ref
 			SpoofedConvar* sv_cheats_spoofed = nullptr;
 			if (Settings::Untrusted)
 			{
@@ -424,7 +433,7 @@ namespace Client
 					sv_cheats_spoofed->~SpoofedConvar();
 					DELETE_MOD(sv_cheats_spoofed);
 				}
-			}
+			}*/
 			/*if (g_pMisc) //broken lul - thirdperson
 				g_pMisc->FrameStageNotify(Stage);*/
 
@@ -707,17 +716,14 @@ namespace Client
 		static int tabOrder[] = { 0 , 1 , 2 };
 		const bool tabChanged = ImGui::TabLabels(tabNames, sizeof(tabNames) / sizeof(tabNames[0]), otherpages, tabOrder);
 
-		if (otherpages == 0)
-		{
-			const char* knife_models_items[] =
-			{
-				"Default","Bayonet","Flip","Gut","Karambit" ,"M9 Bayonet",
-				"Huntsman","Falchion","Bowie","Butterfly","Shadow Daggers",
-				"Navaja Knife", "Stiletto Knife", "Ursus Knife", "Talon Knife",
-				"CSS Knife", "Paracord Knife", "Survival Knife", "Nomad Knife",
-				"Skeleton Knife"
+		if(otherpages == 0) { //skins
+			const char* knife_models_items[] = {
+				"Default", "Bayonet", "Gold Knife", "Spectral Shiv", "CSS Knife",
+				"Flip Knife", "Gut Knife", "Karambit", "M9 Bayonet", "Huntsman Knife",
+				"Falchion Knife", "Bowie Knife", "Butterfly Knife", "Shadow Daggers",
+				"Survival Knife", "Ursus Knife", "Paracord Knife", "Navaja Knife",
+				"Nomad Knife", "Stiletto Knife", "Talon Knife", "Skeleton Knife"
 			};
-
 			const char* quality_items[] =
 			{
 				"Use PaintKit Default",
@@ -737,10 +743,11 @@ namespace Client
 				"Default (Counter-Terrorists)",
 				"Sporty",
 				"Slick",
-				"Handwrap",
+				"Leather Handwrap",
 				"Motorcycle",
 				"Specialist",
-				"Hydra"
+				"Hydra",
+				"Brokenfang" //uwu
 			};
 
 			ImGui::Separator();
@@ -750,29 +757,32 @@ namespace Client
 			static int iSelectKnifeCTSkinIndex = -1;
 			static int iSelectKnifeTTSkinIndex = -1;
 
-			int iKnifeCTModelIndex = Settings::Skin::knf_ct_model;
-			int iKnifeTTModelIndex = Settings::Skin::knf_tt_model;
+			//model
+			int iKnifeCTModelIndex = Settings::Skins::knife_ct_type;
+			int iKnifeTTModelIndex = Settings::Skins::knife_t_type;
 
 			static int iOldKnifeCTModelIndex = -1;
 			static int iOldKnifeTTModelIndex = -1;
 
-			if (iOldKnifeCTModelIndex != iKnifeCTModelIndex && Settings::Skin::knf_ct_model)
-				iSelectKnifeCTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skin::knf_ct_skin, false);
+			if(iOldKnifeCTModelIndex != iKnifeCTModelIndex && Settings::Skins::knife_ct_type) //model
+				iSelectKnifeCTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skins::knife_ct_skin, false);
 
-			if (iOldKnifeTTModelIndex != iKnifeTTModelIndex && Settings::Skin::knf_tt_model)
-				iSelectKnifeTTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skin::knf_ct_skin, true);
+			if(iOldKnifeTTModelIndex != iKnifeTTModelIndex && Settings::Skins::knife_t_type) //model
+				iSelectKnifeTTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skins::knife_ct_skin, true); //knife_t_skin
 
 			iOldKnifeCTModelIndex = iKnifeCTModelIndex;
 			iOldKnifeTTModelIndex = iKnifeTTModelIndex;
 
-			string KnifeCTModel = knife_models_items[Settings::Skin::knf_ct_model];
-			string KnifeTTModel = knife_models_items[Settings::Skin::knf_tt_model];
+			//model
+			string KnifeCTModel = knife_models_items[Settings::Skins::knife_ct_type];
+			string KnifeTTModel = knife_models_items[Settings::Skins::knife_t_type];
 
 			KnifeCTModel += " Skin##KCT";
 			KnifeTTModel += " Skin##KTT";
 
 			ImGui::PushItemWidth(362.f);
-			ImGui::Combo("Knife CT Model", &Settings::Skin::knf_ct_model, knife_models_items, IM_ARRAYSIZE(knife_models_items));
+			//model
+			ImGui::Combo("Knife CT Model", &Settings::Skins::knife_ct_type, knife_models_items, IM_ARRAYSIZE(knife_models_items));
 			ImGui::PushItemWidth(362.f);
 			ImGui::ComboBoxArray("Knife CT Skin", &iSelectKnifeCTSkinIndex, KnifeSkins[iKnifeCTModelIndex].SkinNames);
 			ImGui::PushItemWidth(362.f);
@@ -780,7 +790,8 @@ namespace Client
 			ImGui::Spacing();
 
 			ImGui::PushItemWidth(362.f);
-			ImGui::Combo("Knife T Model", &Settings::Skin::knf_tt_model, knife_models_items, IM_ARRAYSIZE(knife_models_items));
+			//model
+			ImGui::Combo("Knife T Model", &Settings::Skins::knife_t_type, knife_models_items, IM_ARRAYSIZE(knife_models_items));
 			ImGui::PushItemWidth(362.f);
 			ImGui::ComboBoxArray("Knife T Skin", &iSelectKnifeTTSkinIndex, KnifeSkins[iKnifeTTModelIndex].SkinNames);
 			ImGui::PushItemWidth(362.f);
@@ -796,7 +807,7 @@ namespace Client
 
 			iWeaponSelectIndex = pWeaponItemIndexData[iWeaponID];
 
-			if (iOldWeaponID != iWeaponID)
+			if(iOldWeaponID != iWeaponID)
 				iWeaponSelectSkinIndex = GetWeaponSkinIndexFromPaintKit(g_SkinChangerCfg[iWeaponSelectIndex].nFallbackPaintKit);
 
 			iOldWeaponID = iWeaponID;
@@ -818,36 +829,32 @@ namespace Client
 			ImGui::Separator();
 
 			ImGui::PushItemWidth(362.f);
-			ImGui::Combo("Gloves Type", &Settings::Skin::gloves_model, GlovesType, IM_ARRAYSIZE(GlovesType));
+			ImGui::Combo("Gloves Type", &Settings::Skins::glove_type, GlovesType, IM_ARRAYSIZE(GlovesType));
 			ImGui::PushItemWidth(362.f);
-			ImGui::ComboBoxArray("Gloves Skin", &Settings::Skin::gloves_skin, GloveSkin[Settings::Skin::gloves_model].Names);
+			ImGui::ComboBoxArray("Gloves Skin", &Settings::Skins::glove_skin, GloveSkin[Settings::Skins::glove_type].Names); //glove_model
 			ImGui::Separator();
 
 
-			if (ImGui::Button("Apply##Skin"))
-			{
-				if (iWeaponSelectSkinIndex >= 0) {
+			if(ImGui::Button("Apply##Skin")) {
+				if(iWeaponSelectSkinIndex >= 0) {
 					g_SkinChangerCfg[iWeaponSelectIndex].nFallbackPaintKit = WeaponSkins[iWeaponID].SkinPaintKit[iWeaponSelectSkinIndex];
 				}
-
-				if (iSelectKnifeCTSkinIndex >= 0 && Settings::Skin::knf_ct_model > 0) {
-					Settings::Skin::knf_ct_skin = KnifeSkins[iKnifeCTModelIndex].SkinPaintKit[iSelectKnifeCTSkinIndex];
+				//1 - model
+				if(iSelectKnifeCTSkinIndex >= 0 && Settings::Skins::knife_ct_type > 0) {
+					Settings::Skins::knife_ct_skin = KnifeSkins[iKnifeCTModelIndex].SkinPaintKit[iSelectKnifeCTSkinIndex];
 				}
-				else
-				{
-					Settings::Skin::knf_ct_skin = 0;
+				else {
+					Settings::Skins::knife_ct_skin = 0;
 					iSelectKnifeCTSkinIndex = -1;
 				}
-
-				if (iSelectKnifeTTSkinIndex >= 0 && Settings::Skin::knf_tt_model > 0) {
-					Settings::Skin::knf_tt_skin = KnifeSkins[iKnifeTTModelIndex].SkinPaintKit[iSelectKnifeTTSkinIndex];
+				//1 - model
+				if(iSelectKnifeTTSkinIndex >= 0 && Settings::Skins::knife_t_type > 0) {
+					Settings::Skins::knife_t_skin = KnifeSkins[iKnifeTTModelIndex].SkinPaintKit[iSelectKnifeTTSkinIndex];
 				}
-				else
-				{
-					Settings::Skin::knf_tt_skin = 0;
+				else {
+					Settings::Skins::knife_t_skin = 0;
 					iSelectKnifeTTSkinIndex = -1;
 				}
-
 				ForceFullUpdate();
 			}
 
@@ -885,19 +892,54 @@ namespace Client
 				static int itemidtmp = 0, itemDefinitionIndex = 0, paintKit = 0, paintkit_temp_skin = 0, paintkit_temp_gloves = 0, rarity = 0, seed = 0, raritypick = 0;
 				static float wear = 0.f;
 				const char* raritynames[] = { "Default (Gray)", "Consumer Grade (White)", "Industrial Grade (Light Blue)", "Mil-Spec (Darker Blue)", "Restricted (Purple)", "Classified (Pinkish Purple)", "Covert (Red)", "Exceedingly Rare (Gold)" };
-				const char* itemnames[] = { "Desert Eagle", "Dual Berettas", "Five-Seven", "Glock-18", "AK-47", "AUG", "AWP", "FAMAS", "G3SG1", "Galil AR", "M249", "M4A4",
-					"MAC-10", "P90", "UMP-45", "XM1014", "PP-Bizon", "MAG-7", "Negev", "Sawed-Off", "Tec-9", "P2000", "MP7", "MP5-SD", "MP9", "Nova", "P250", "SCAR-20", "SG 556", "SSG 08",
+
+				const char* itemnames[] = {
+					//guns
+					"Desert Eagle", "Dual Berettas", "Five-Seven",
+					"Glock-18", "AK-47", "AUG", "AWP", "FAMAS", "G3SG1", "Galil AR", "M249",
+					"M4A1", "MAC-10", "P90", "MP5-SD" "UMP-45", "XM1014", "PP-Bizon", "MAG-7",
+					"Negev", "Sawed-Off", "Tec-9", "P2000", "MP7", "MP9", "Nova", "P250",
+					"SCAR-20", "SG 556", "SSG 08",
+
+					//knives1
+					"Gold Knife", "Default (CT) Knife", "Default (T) Knife",
+
+					//guns2
 					"M4A1-S", "USP-S", "CZ75-Auto", "R8 Revolver",
-					"Bayonet", "Flip Knife", "Gut Knife", "Karambit", "M9 Bayonet", "Huntsman Knife", "Falchion Knife", "Bowie Knife", "Butterfly Knife",
-					"Shadow Daggers", "Navaja Knife", "Stiletto Knife", "Ursus Knife", "Talon Knife", "CSS Knife", "Paracord Knife", "Survival Knife", "Nomad Knife", "Skeleton Knife",
-					"Sport Gloves", "Driver Gloves", "Hand Wraps", "Moto Gloves", "Specialist Gloves", "Hydra Gloves" };
-				const int weapons_id[] = { WEAPON_DEAGLE, WEAPON_ELITE, WEAPON_FIVESEVEN, WEAPON_GLOCK, WEAPON_AK47, WEAPON_AUG, WEAPON_AWP, WEAPON_FAMAS, WEAPON_G3SG1, WEAPON_GALIL, WEAPON_M249,
-					WEAPON_M4A4, WEAPON_MAC10, WEAPON_P90, WEAPON_UMP45, WEAPON_XM1014, WEAPON_BIZON, WEAPON_MAG7, WEAPON_NEGEV, WEAPON_SAWEDOFF, WEAPON_TEC9, WEAPON_P2000, WEAPON_MP7, WEAPON_MP5SD, WEAPON_MP9,
-					WEAPON_NOVA, WEAPON_P250, WEAPON_SCAR20, WEAPON_SG553, WEAPON_SSG08, WEAPON_M4A1S, WEAPON_USPS, WEAPON_CZ75, WEAPON_REVOLVER, WEAPON_BAYONET, WEAPON_KNIFE_FLIP,
-					WEAPON_KNIFE_GUT, WEAPON_KNIFE_KARAMBIT, WEAPON_KNIFE_M9_BAYONET, WEAPON_KNIFE_TACTICAL, WEAPON_KNIFE_FALCHION, WEAPON_KNIFE_SURVIVAL_BOWIE, WEAPON_KNIFE_SURVIVAL_BOWIE,
-					WEAPON_KNIFE_BUTTERFLY, WEAPON_KNIFE_PUSH, WEAPON_KNIFE_GYPSY_JACKKNIFE, WEAPON_KNIFE_STILETTO, WEAPON_KNIFE_URSUS, WEAPON_KNIFE_WIDOWMAKER, WEAPON_KNIFE_CSS,
-					WEAPON_KNIFE_CORD, WEAPON_KNIFE_CANIS, WEAPON_KNIFE_OUTDOOR, WEAPON_KNIFE_SKELETON,
-					5030, 5031, 5032, 5033, 5034, 5035
+
+					//knives2
+					"Spectral Shiv", "Bayonet", "CSS Knife", "Flip Knife", "Gut Knife",
+					"Karambit", "M9 Bayonet", "Huntsman Knife", "Falchion Knife", "Bowie Knife",
+					"Butterfly Knife", "Shadow Daggers", "Paracord Knife", "Survival Knife",
+					"Ursus Knife", "Navaja Knife", "Nomad Knife", "Stiletto Knife", "Talon Knife",
+					"Skeleton Knife",
+
+					//gloves
+					"Bloodhound Gloves", "Default (T) Gloves", "Default (CT) Gloves",
+					"Sporty Gloves", "Slick Gloves", "Leather Handwrap Gloves",
+					"Motorcycle Gloves", "Specialist Gloves", "Hydra Gloves",
+					"Brokenfang Gloves" }; //uwu
+
+				const int weapons_id[] = { WEAPON_DEAGLE, WEAPON_ELITE, /*Dual Berettas*/
+					WEAPON_FIVESEVEN, WEAPON_GLOCK, WEAPON_AK47, WEAPON_AUG,
+					WEAPON_AWP, WEAPON_FAMAS, WEAPON_G3SG1, WEAPON_GALILAR, WEAPON_M249,
+					WEAPON_M4A1, WEAPON_MAC10, WEAPON_P90, WEAPON_MP5SD, WEAPON_UMP45,
+					WEAPON_XM1014, WEAPON_BIZON, WEAPON_MAG7, WEAPON_NEGEV,
+					WEAPON_SAWEDOFF, WEAPON_TEC9, WEAPON_HKP2000, WEAPON_MP7,
+					WEAPON_MP9, WEAPON_NOVA, WEAPON_P250, WEAPON_SCAR20,
+					WEAPON_SG556, WEAPON_SSG08, WEAPON_KNIFEGG, WEAPON_KNIFE,
+					WEAPON_KNIFE_T, WEAPON_M4A1_SILENCER, WEAPON_USP_SILENCER,
+					WEAPON_CZ75A, WEAPON_REVOLVER, WEAPON_KNIFE_GHOST, /*Spectral Shiv*/
+					WEAPON_BAYONET, WEAPON_KNIFE_CSS, WEAPON_KNIFE_FLIP, WEAPON_KNIFE_GUT,
+					WEAPON_KNIFE_KARAMBIT, WEAPON_KNIFE_M9_BAYONET, WEAPON_KNIFE_TACTICAL, /*Huntsman Knife*/
+					WEAPON_KNIFE_FALCHION, WEAPON_KNIFE_SURVIVAL_BOWIE, WEAPON_KNIFE_BUTTERFLY,
+					WEAPON_KNIFE_PUSH, /*Shadow Daggers*/ WEAPON_KNIFE_CORD, /*Paracord Knife*/
+					WEAPON_KNIFE_CANIS, /*Survival Knife*/ WEAPON_KNIFE_URSUS,
+					WEAPON_KNIFE_GYPSY_JACKKNIFE, WEAPON_KNIFE_OUTDOOR, /*Nomad Knife*/
+					WEAPON_KNIFE_STILETTO, WEAPON_KNIFE_WIDOWMAKER, WEAPON_KNIFE_SKELETON,
+					STUDDED_BLOODHOUND_GLOVES, T_GLOVES, /*Default (T) Gloves*/
+					CT_GLOVES, /*Default (CT) Gloves*/ SPORTY_GLOVES, SLICK_GLOVES, LEATHER_HANDWRAPS,
+					MOTORCYCLE_GLOVES, SPECIALIST_GLOVES, STUDDED_HYDRA_GLOVES, STUDDED_BROKENFANG_GLOVES, //uwu
 				};
 				ImGui::Combo(("Item"), &itemidtmp, itemnames, ARRAYSIZE(itemnames));
 				itemDefinitionIndex = weapons_id[itemidtmp];
@@ -1047,7 +1089,7 @@ namespace Client
 			ImGui::SameLine(SpaceLineThr);
 			ImGui::Checkbox("Watermarks", &Settings::Esp::esp_Watermark);
 			Settings::Esp::esp_Time = Settings::Esp::esp_Watermark;
-			//ImGui::Checkbox("Glow (BETA)", &Settings::Esp::glow);
+			ImGui::Checkbox("Glow (BETA)", &Settings::Esp::glow); //TEST
 			/// probably won't be fixed cause im lazy
 
 			ImGui::Spacing();
@@ -1235,49 +1277,6 @@ namespace Client
 			}
 			RefreshConfigs();
 		}
-
-		// old themes outdated since 4.0
-
-		//ImGui::Separator();
-
-		//const char* ThemesList[] = { "Purple" , "Default" , "Light Pink" , "Dark Blue" , "MidNight" , "Night" , "Dunno" , "Blue"  , "Black" , "Green" , "Yellow" , "Light Blue" , "Light Grey" , "pHooK" };
-
-		//ImGui::PushItemWidth(362.f);
-		//ImGui::Combo("Menu Color", &iMenuSheme, ThemesList, IM_ARRAYSIZE(ThemesList));
-
-		//ImGui::Separator();
-
-		/*if (ImGui::Button("Apply Color"))
-		{
-			if (iMenuSheme == 0)
-				g_pGui->purple();
-			else if (iMenuSheme == 1)
-				g_pGui->DefaultSheme1();
-			else if (iMenuSheme == 2)
-				g_pGui->RedSheme();
-			else if (iMenuSheme == 3)
-				g_pGui->darkblue();
-			else if (iMenuSheme == 4)
-				g_pGui->MidNightSheme();
-			else if (iMenuSheme == 5)
-				g_pGui->NightSheme();
-			else if (iMenuSheme == 6)
-				g_pGui->DunnoSheme();
-			else if (iMenuSheme == 7)
-				g_pGui->BlueSheme();
-			else if (iMenuSheme == 8)
-				g_pGui->BlackSheme2();
-			else if (iMenuSheme == 9)
-				g_pGui->green();
-			else if (iMenuSheme == 10)
-				g_pGui->pink();
-			else if (iMenuSheme == 11)
-				g_pGui->blue();
-			else if (iMenuSheme == 12)
-				g_pGui->yellow();
-			else if (iMenuSheme == 13)
-				g_pGui->BlackSheme();
-		}*/
 	}
 
 	void DrawMisc() // Misc

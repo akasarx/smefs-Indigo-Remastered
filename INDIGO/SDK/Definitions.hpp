@@ -15,13 +15,23 @@
 
 #define VirtualFn( cast ) typedef cast( __thiscall* OriginalFn )
 
-template< typename Function > Function GetMethod( PVOID Base , DWORD Index )
-{
+//new
+//vfunc.hpp - CallVFunction(void* ppClass, int index)
+template<typename FuncType>
+__forceinline static FuncType GetMethod(PVOID Base, DWORD Index) { //to maintain compatability
+	int* pVTable = *(int**)Base;
+	int dwAddress = pVTable[Index];
+	return (FuncType)(dwAddress); //lol
+}
+
+//old
+/*
+template<typename Function> Function GetMethod(PVOID Base, DWORD Index) {
 	PDWORD* VTablePointer = (PDWORD*)Base;
 	PDWORD VTableFunctionBase = *VTablePointer;
 	DWORD dwAddress = VTableFunctionBase[Index];
-	return (Function)( dwAddress );
-}
+	return (Function)(dwAddress);
+}*/
 
 typedef struct con_nprint_s
 {

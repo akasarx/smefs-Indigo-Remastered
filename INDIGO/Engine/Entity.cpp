@@ -30,10 +30,25 @@ namespace Engine
 		return (!IsDead() && GetHealth() > 0 && !IsDormant()); //IsDormant lol
 	}
 
-	bool CBaseEntity::IsDead()
-	{
-		const auto LifeState = *reinterpret_cast<PBYTE>(DWORD(this) + Offset::Entity::m_lifeState);
-		return (LifeState != LIFE_ALIVE);
+	bool CBaseEntity::IsDead() {
+		BYTE LifeState = *(PBYTE)((DWORD)this + Offset::Entity::m_lifeState);
+		switch(LifeState) {
+		case LIFE_ALIVE: //alive
+			return false;
+			break;
+		case LIFE_DYING: //playing death animation so dead
+			return true;
+			break;
+		case LIFE_DEAD: //dead
+			return true;
+			break;
+		case LIFE_RESPAWNABLE: //dead
+			return true;
+			break;
+		case LIFE_DISCARDBODY: //dead
+			return true;
+			break;
+		}
 	}
 
 	Vector CBaseEntity::GetOrigin()
@@ -51,6 +66,7 @@ namespace Engine
 		if (vSrcOrigin.IsZero() || !vSrcOrigin.IsValid())
 			return false;
 
+		//lower neck hitbox removed in like 2018 btw apparently
 		BYTE bHitBoxCheckVisible[6] = {
 			HITBOX_HEAD,
 			HITBOX_BODY,

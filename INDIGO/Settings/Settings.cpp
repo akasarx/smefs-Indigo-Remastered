@@ -160,14 +160,13 @@ namespace Settings
 		int knf_DistAttack2 = 64;
 	}
 
-	namespace Skin
-	{
-		int knf_ct_model = 0;
-		int knf_ct_skin = 0;
-		int knf_tt_model = 0;
-		int knf_tt_skin = 0;
-		int gloves_skin = -1;
-		int gloves_model = 0;
+	namespace Skins {
+		int knife_t_type = 0;
+		int knife_t_skin = 0;
+		int knife_ct_type = 0;
+		int knife_ct_skin = 0;
+		int glove_type = 0;
+		int glove_skin = -1;
 	}
 
 	namespace Misc
@@ -352,7 +351,9 @@ namespace Settings
 		Esp::esp_Dlightz = CSX::Cvar::LoadCvar(VISUAL_TEXT, CVAR_ESP_DLIGHTZ, Esp::esp_Dlightz); //Dynamiclights - esp_Dlightz
 		Esp::esp_Watermark = CSX::Cvar::LoadCvar(VISUAL_TEXT, CVAR_ESP_WATER, Esp::esp_Watermark);
 		Esp::esp_Time = CSX::Cvar::LoadCvar(VISUAL_TEXT, CVAR_ESP_TIME, Esp::esp_Time); // = watermark but added anyway xD
-		//add glow here if it ever gets fixed!! :D
+
+		//glow :D
+		Esp::glow = CSX::Cvar::LoadCvar(VISUAL_TEXT, CVAR_ESP_GLOW, Settings::Esp::glow); //glow
 
 		Esp::esp_Style = CSX::Cvar::LoadCvar(VISUAL_TEXT, CVAR_ESP_STYLE, Esp::esp_Style);
 
@@ -430,16 +431,24 @@ namespace Settings
 		Knifebot::knf_DistAttack = CSX::Cvar::LoadCvar(KNIFEBOT_TEXT, CVAR_KNIFEBOT_DISTATTACK, Knifebot::knf_DistAttack);
 		Knifebot::knf_DistAttack2 = CSX::Cvar::LoadCvar(KNIFEBOT_TEXT, CVAR_KNIFEBOT_DISTATTACK2, Knifebot::knf_DistAttack2);
 
-		Skin::knf_ct_model = CSX::Cvar::LoadCvar( SKIN_TEXT , CVAR_SKIN_CT_MODEL , Skin::knf_ct_model );
-		Skin::knf_ct_skin = CSX::Cvar::LoadCvar( SKIN_TEXT , CVAR_SKIN_CT_SKIN , Skin::knf_ct_skin );
-		Skin::knf_tt_model = CSX::Cvar::LoadCvar( SKIN_TEXT , CVAR_SKIN_TT_MODEL , Skin::knf_tt_model );
-		Skin::knf_tt_skin = CSX::Cvar::LoadCvar( SKIN_TEXT , CVAR_SKIN_TT_SKIN , Skin::knf_tt_skin );
-		Skin::gloves_skin = CSX::Cvar::LoadCvar( SKIN_TEXT , CVAR_SKIN_GLOVES , Skin::gloves_skin );
-		Skin::gloves_model = CSX::Cvar::LoadCvar( SKIN_TEXT , "gloves_model" , Skin::gloves_model );
-		for ( DWORD i = 0; i < WEAPON_DATA_SIZE; i++ )
-		{
-			g_SkinChangerCfg[pWeaponItemIndexData[i]].nFallbackPaintKit = CSX::Cvar::LoadCvar( SKIN_TEXT , pWeaponData[i] , 0 );
+		//Skin Settings
+		Skins::knife_t_type = CSX::Cvar::LoadCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_T_TYPE, Skins::knife_t_type);
+		Skins::knife_t_skin = CSX::Cvar::LoadCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_T_SKIN, Skins::knife_t_skin);
+		Skins::knife_ct_type = CSX::Cvar::LoadCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_CT_TYPE, Skins::knife_ct_type);
+		Skins::knife_ct_skin = CSX::Cvar::LoadCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_CT_SKIN, Skins::knife_ct_skin);
+		Skins::glove_type = CSX::Cvar::LoadCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_GLOVE_TYPE, Skins::glove_type);
+		Skins::glove_skin = CSX::Cvar::LoadCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_GLOVE_SKIN, Skins::glove_skin);
+		
+		//Skins
+		for(DWORD i = 0; i < WEAPON_DATA_SIZE; i++) {
+			g_SkinChangerCfg[pWeaponItemIndexData[i]].nFallbackPaintKit = CSX::Cvar::LoadCvar(SKINS_TEXT, pWeaponData[i], 0);
 		}
+
+		//Refresh loaded skins
+		if(Interfaces::Engine()->IsConnected()) {
+			ForceFullUpdate();
+		}
+
 		// damn this goes in so well, nice 1-1 paste jozkah
 		InvChanger::CustomWeaponCount = CSX::Cvar::LoadCvar(PROFILE_TEXT, "MedalCount", 100);
 		for (int i = 0; i < Settings::InvChanger::CustomWeaponCount; i++) {
@@ -447,7 +456,7 @@ namespace Settings
 			InvChanger::medals[i] = CSX::Cvar::LoadCvar(PROFILE_TEXT, (char*)slots.c_str(), 0);
 		}
 
-		InvChanger::CustomWeaponCount = CSX::Cvar::LoadCvar(SKIN_TEXT, "ItemCount", 0);
+		InvChanger::CustomWeaponCount = CSX::Cvar::LoadCvar(SKINS_TEXT, "ItemCount", 0);
 		InvChanger::weapons.clear();
 		for (int i = 0; i < Settings::InvChanger::CustomWeaponCount; i++) {
 			string itemidstr = "item" + to_string(i) + "_id";
@@ -648,8 +657,11 @@ namespace Settings
 		CSX::Cvar::SaveCvar(VISUAL_TEXT, CVAR_ESP_DLIGHTZ, Esp::esp_Dlightz); //Dynamiclights - esp_Dlightz
 		CSX::Cvar::SaveCvar(VISUAL_TEXT, CVAR_ESP_WATER, Settings::Esp::esp_Watermark);
 		CSX::Cvar::SaveCvar(VISUAL_TEXT, CVAR_ESP_TIME, Settings::Esp::esp_Time); // = watermark but added anyway xD
-		//add glow here if it ever gets fixed!! :D
+		
+		//glow :D
+		CSX::Cvar::SaveCvar(VISUAL_TEXT, CVAR_ESP_GLOW, Settings::Esp::glow); //glow
 
+		//TODO: SaveCvar
 		CSX::Cvar::SaveCvar(VISUAL_TEXT, CVAR_ESP_STYLE, Settings::Esp::esp_Style);
 
 		//Visuals - Page 2
@@ -773,16 +785,16 @@ namespace Settings
 		CSX::Cvar::SaveCvar(KNIFEBOT_TEXT, CVAR_KNIFEBOT_DISTATTACK, Knifebot::knf_DistAttack);
 		CSX::Cvar::SaveCvar(KNIFEBOT_TEXT, CVAR_KNIFEBOT_DISTATTACK2, Knifebot::knf_DistAttack2);
 
-		CSX::Cvar::SaveCvar( SKIN_TEXT , CVAR_SKIN_CT_MODEL , Skin::knf_ct_model );
-		CSX::Cvar::SaveCvar( SKIN_TEXT , CVAR_SKIN_CT_SKIN , Skin::knf_ct_skin );
-		CSX::Cvar::SaveCvar( SKIN_TEXT , CVAR_SKIN_TT_MODEL , Skin::knf_tt_model );
-		CSX::Cvar::SaveCvar( SKIN_TEXT , CVAR_SKIN_TT_SKIN , Skin::knf_tt_skin );
-		CSX::Cvar::SaveCvar( SKIN_TEXT , CVAR_SKIN_GLOVES , Skin::gloves_skin );
-		CSX::Cvar::SaveCvar( SKIN_TEXT , "gloves_model" , Skin::gloves_model );
+		//Skin Settings
+		CSX::Cvar::SaveCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_T_TYPE, Skins::knife_t_type);
+		CSX::Cvar::SaveCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_T_SKIN, Skins::knife_t_skin);
+		CSX::Cvar::SaveCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_CT_TYPE, Skins::knife_ct_type);
+		CSX::Cvar::SaveCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_CT_SKIN, Skins::knife_ct_skin);
+		CSX::Cvar::SaveCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_GLOVE_TYPE, Skins::glove_type);
+		CSX::Cvar::SaveCvar(SKINS_SETTINGS_TEXT, CVAR_SKINS_GLOVE_SKIN, Skins::glove_skin);
 		
-		for ( DWORD i = 0; i < WEAPON_DATA_SIZE; i++ )
-		{
-			CSX::Cvar::SaveCvar( SKIN_TEXT , pWeaponData[i] , g_SkinChangerCfg[pWeaponItemIndexData[i]].nFallbackPaintKit );
+		for(DWORD i = 0; i < WEAPON_DATA_SIZE; i++) {
+			CSX::Cvar::SaveCvar(SKINS_TEXT, pWeaponData[i], g_SkinChangerCfg[pWeaponItemIndexData[i]].nFallbackPaintKit);
 		}
 
 		CSX::Cvar::SaveCvar(PROFILE_TEXT, "MedalCount", Settings::InvChanger::MedalsCount);
@@ -791,7 +803,7 @@ namespace Settings
 			string slots = "medalslots_" + to_string(i);
 			CSX::Cvar::SaveCvar(PROFILE_TEXT, (char*)slots.c_str(), Settings::InvChanger::medals[i]);
 		}
-		CSX::Cvar::SaveCvar(SKIN_TEXT, "ItemCount", Settings::InvChanger::CustomWeaponCount);
+		CSX::Cvar::SaveCvar(SKINS_TEXT, "ItemCount", Settings::InvChanger::CustomWeaponCount);
 		for (int i = 0; i < Settings::InvChanger::CustomWeaponCount; i++) {
 			string itemidstr = "item" + to_string(i) + "_id";
 			string paintkitstr = "item" + to_string(i) + "_paintkit";

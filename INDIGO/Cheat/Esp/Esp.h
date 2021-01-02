@@ -11,12 +11,53 @@
 
 #define CHECK_VALID( _v)	0
 
-FORCEINLINE vec_t DotProduct(const Vector& a, const Vector& b)
-{
+FORCEINLINE vec_t DotProduct(const Vector& a, const Vector& b) {
 	CHECK_VALID(a);
 	CHECK_VALID(b);
 	return(a.x*b.x + a.y*b.y + a.z*b.z);
+
 }
+//Lets do this!!!! :D - noodled, 17th November 2020
+//WE CAN DO IT
+
+//singleton.hpp from csgosimple lol
+template<typename T>
+class Singleton {
+protected:
+	Singleton() {
+	}
+	~Singleton() {
+	}
+
+	Singleton(const Singleton&) = delete;
+	Singleton& operator=(const Singleton&) = delete;
+
+	Singleton(Singleton&&) = delete;
+	Singleton& operator=(Singleton&&) = delete;
+
+public:
+	static T& Get() {
+		static T inst{};
+		return inst;
+	}
+};
+
+class visuals {
+public:
+	class Glow
+		: public Singleton<Glow> {
+		friend class Singleton<Glow>;
+
+		Glow();
+		~Glow();
+		CGlowObjectManager* g_GlowObjManager = Interfaces::GlowManager(); //idk if this will work lol
+
+	public:
+		void Run();
+		void Shutdown();
+	};
+};
+
 
 namespace Engine
 {

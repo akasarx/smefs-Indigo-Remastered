@@ -81,7 +81,7 @@ namespace Engine {
 		TEAM_CT
 	};
 
-	//14 Dec 2020 - ClientClass - ClassID_t
+	//14th Dec 2020 - ClientClass - ClassID_t - class_id
 	enum class CLIENT_CLASS_ID {
 		CTestTraceline = 224,
 		CTEWorldDecal = 225,
