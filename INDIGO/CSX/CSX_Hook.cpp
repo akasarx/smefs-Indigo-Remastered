@@ -47,15 +47,15 @@ namespace CSX {
 		return Func_o;
 	}
 
-	//Indigo VMT Hooking - you sure love your PVOIDs, don't you lol
+	//Indigo VMT Hooking - you sure love your PVOID*s, don't you lol
 	bool Hook::VMT_InitTable(PVOID pTablePtrPtr) {
 		if(IsBadReadPtr(pTablePtrPtr, sizeof(PVOID)))
 			return false;
 
-		class_base = (PVOID)pTablePtrPtr; //(PVOID*)pTablePtrPtr;
-		old_vftbl = (std::uintptr_t*)(*(PDWORD)class_base); //(PVOID*)
+		pclass_base = (std::uintptr_t*)pTablePtrPtr; //(PVOID*)pTablePtrPtr;
+		old_vftbl = (std::uintptr_t*)(*(PDWORD)pclass_base); //(PVOID*)
 
-		while(!CSX::Utils::IsBadReadPtr((std::uintptr_t*)old_vftbl[dwCountFunc]))
+		while(!CSX::Utils::VMT_IsBadReadPtr((std::uintptr_t*)old_vftbl[dwCountFunc]))
 			dwCountFunc++; //(no cast)
 
 		if(dwCountFunc) {
@@ -65,7 +65,7 @@ namespace CSX {
 			new_vftbl = (std::uintptr_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, vftbl_len);
 			memcpy(new_vftbl, old_vftbl, vftbl_len);
 
-			*(PDWORD)class_base = (DWORD)new_vftbl;
+			*(PDWORD)pclass_base = (DWORD)new_vftbl;
 
 			return true;
 		}
@@ -79,7 +79,7 @@ namespace CSX {
 	}
 
 	//Indigo - but pretty much same as get_original but with cast
-	PVOID Hook::GetFuncAddress(DWORD dwIndex) {
+	PVOID Hook::VMT_GetFuncAddress(DWORD dwIndex) {
 		if(old_vftbl) {
 			PVOID pAddres = ((PVOID*)old_vftbl)[dwIndex];
 			return pAddres;
@@ -99,15 +99,27 @@ namespace CSX {
 	}
 
 	//Indigo VMT Hooking
-	void Hook::UnHook() {
-		if(!CSX::Utils::IsBadReadPtr(class_base))
-			*(PDWORD)class_base = (DWORD)old_vftbl;
+	void Hook::VMT_UnHook() {
+		if(!CSX::Utils::VMT_IsBadReadPtr(pclass_base))
+			*(PDWORD)pclass_base = (DWORD)old_vftbl;
 	}
 
 	//Indigo VMT Hooking
-	void Hook::ReHook() {
-		if(!CSX::Utils::IsBadReadPtr(class_base))
-			*(PDWORD)class_base = (DWORD)new_vftbl;
+	void Hook::VMT_ReHook() {
+		if(!CSX::Utils::VMT_IsBadReadPtr(pclass_base))
+			*(PDWORD)pclass_base = (DWORD)new_vftbl;
+	}
+
+	//Test
+	void Hook::New_UnHook() {
+		if(!CSX::Utils::New_IsBadReadPtr(*(std::uintptr_t**)class_base))
+			*(std::uintptr_t**)class_base = old_vftbl;
+	}
+
+	//Test
+	void Hook::New_ReHook() {
+		if(!CSX::Utils::New_IsBadReadPtr(*(std::uintptr_t**)class_base))
+			*(std::uintptr_t**)class_base = new_vftbl;
 	}
 	
 	uintptr_t* Hook::search_free_data_page(const char* module_name, const std::size_t vmt_size) { /*Modified code from exphck https://www.unknowncheats.me/forum/2128832-post43.html */
@@ -152,20 +164,21 @@ namespace CSX {
 	}
 
 	//Indigo vars for ref
-	/*Hook::Hook() {
-		class_base = nullptr; //pPtrPtrTable
-		old_vftbl = nullptr;
-		new_vftbl = nullptr;
-		//class_base = nullptr; //?? pPtrPtrTable
-		dwCountFunc = 0;
-		vftbl_len = 0; //dwSizeTable
+	/*VTable::VTable() { //Hook::Hook()
+		pPtrPtrTable = nullptr; //class_base but double pointer
+		pPtrOldTable = nullptr; //old_vftbl
+		pPtrNewTable = nullptr; //new_vftbl
+		pPtrPtrTable = nullptr; //a mistake
+
+		dwCountFunc = 0; //counting the funcs along the vtable is my guess
+		dwSizeTable = 0; //vftbl_len?
 	}*/
 
 	Hook::Hook() //vfunc_hook::vfunc_hook()
-		: class_base(nullptr), vftbl_len(0), new_vftbl(nullptr), old_vftbl(nullptr), dwCountFunc(0) { //dwCountFunc(0) - Indigo
+		: class_base(nullptr), vftbl_len(0), new_vftbl(nullptr), old_vftbl(nullptr), pclass_base(nullptr), dwCountFunc(0) { //last 2 r indigo
 	}
 	Hook::Hook(void* base) //vfunc_hook::vfunc_hook(void* base)
-		: class_base(base), vftbl_len(0), new_vftbl(nullptr), old_vftbl(nullptr), dwCountFunc(0) { //dwCountFunc(0) - Indigo
+		: class_base(base), vftbl_len(0), new_vftbl(nullptr), old_vftbl(nullptr), pclass_base(nullptr), dwCountFunc(0) { //last 2 r indigo
 	}
 	Hook::~Hook() { //vfunc_hook::~vfunc_hook()
 		unhook_all();

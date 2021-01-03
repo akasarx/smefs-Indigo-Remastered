@@ -76,12 +76,12 @@ struct Sound_s
 class CSoundEsp
 {
 public:
+	~CSoundEsp();
+	CSoundEsp();
 //[swap_lines]
 	vector<Sound_s> Sound;
 
 	Color SoundColor;
-
-	CSoundEsp();
 
 	void Update();
 	void AddSound( Vector vOrigin );
@@ -92,6 +92,7 @@ public:
 class CEsp
 {
 public:
+	~CEsp();
 	CEsp();
 //[swap_lines]
 

@@ -14,10 +14,10 @@ public:
 	void OnPlaySound( const char* pszSoundName );
 
 	void OnOverrideView( CViewSetup* pSetup );
-	void OnGetViewModelFOV( float& fov );
+	void OnGetViewModelFOV(float &fov);
 
 	vector<int> GetObservervators( int playerId );
-	void FakeLag(bool & bSendPacket);
+	void FakeLag(bool &bSendPacket);
 	void OnRenderSpectatorList();
 //[/swap_lines]
 };

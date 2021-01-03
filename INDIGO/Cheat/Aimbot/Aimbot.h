@@ -26,6 +26,7 @@ class CAimbot
 {
 public:
 
+	~CAimbot(); //Destructor - shutdown
 	CAimbot();
 	//[swap_lines]
 	bool	IsEnable();

@@ -60,9 +60,32 @@ std::vector<byte> tt_ct_best_hit_4 =
 	HITBOX_CHEST
 };
 
+//Destructor - shutdown
+CAimbot::~CAimbot() {
+	m_pLocal = nullptr;
+	m_pCmd = nullptr;
 
-CAimbot::CAimbot()
-{
+	m_iBestPreTarget = -1;
+	m_iBestTarget = -1;
+	m_iBestHitbox = -1;
+
+	m_bClamp = false;
+	m_bAttack = false;
+	m_bAimShot = false;
+	m_bTargetFov = false;
+	m_bTargetChange = false;
+	m_bAutoPistolEn = false;
+
+	m_pShotDelay = nullptr; //CTimer*
+
+	m_vAimBestHitbox = nullptr; //Vector
+	m_vAimBestHitboxScreen = nullptr; //Vector
+#if ENABLE_DEBUG_FILE == 1
+	CSX::Log::Add("[Aimbot - shutdown]\n");
+#endif
+}
+
+CAimbot::CAimbot() {
 	m_pLocal = nullptr;
 
 	m_iBestPreTarget = -1;

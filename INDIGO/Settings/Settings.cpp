@@ -223,6 +223,8 @@ namespace Settings
 		//float misc_AwpAimColor[3] = { 0.f,0.f,0.f }; //broken
 		float misc_TextColor[3] = { 0.f, 0.f, 0.f };
 		float hitmarkerAlpha;
+
+		bool IsCreateMoveInit = false; //meme but needed
 	}
 
 	int LoadSettings(string szIniFile) {

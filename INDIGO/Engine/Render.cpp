@@ -21,21 +21,23 @@ namespace Engine
 		}
 	}
 
-	CRender::~CRender()
-	{
-		if (m_pFont)
+	CRender::~CRender() {
+		if(m_pFont)
 			m_pFont = nullptr;
 
-		if (LogFont)
+		if(LogFont)
 			LogFont = nullptr;
 
-		if (m_pStateBlockDraw)
+		if(m_pStateBlockDraw)
 			m_pStateBlockDraw = nullptr;
 
-		if (m_pStateBlockText)
+		if(m_pStateBlockText)
 			m_pStateBlockText = nullptr;
 
 		m_pDevice = nullptr;
+#if ENABLE_DEBUG_FILE == 1
+		CSX::Log::Add("[Render - shutdown]\n");
+#endif
 	}
 
 	bool CRender::CreateObject()

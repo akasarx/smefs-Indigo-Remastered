@@ -4,6 +4,28 @@ using namespace Client;
 
 #pragma warning(disable:4244)
 //[junk_enable /]
+
+//Destructor - shutdown
+CTriggerbot::~CTriggerbot() {
+	m_pLocal = nullptr;
+	m_pCmd = nullptr;
+
+	iPreFov = 0;
+	iTriggerShotsFired = 0;
+	bTrigger = false;
+	bAssist = false;
+	bFovTime = false;
+	bIsZoomSniper = false;
+	bTriggerAttack = false;
+
+	dwTriggerStatusTime = 0; //ULONGLONG
+
+	m_pTriggerDelayBefore = nullptr; //CTimer*
+	m_pTriggerDelayAfter = nullptr; //CTimer*
+#if ENABLE_DEBUG_FILE == 1
+	CSX::Log::Add("[Triggerbot - shutdown]\n");
+#endif
+}
 CTriggerbot::CTriggerbot()
 {
 	m_pLocal = nullptr;

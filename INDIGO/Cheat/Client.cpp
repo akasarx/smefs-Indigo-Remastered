@@ -235,19 +235,44 @@ namespace Client
 		free(ptr);
 	}
 
-	void Shutdown() {
-		DELETE_MOD(g_pPlayers);
-		DELETE_MOD(g_pRender);
-		DELETE_MOD(g_pGui);
-		DELETE_MOD(g_pAimbot);
-		DELETE_MOD(g_pKnifebot);
-		DELETE_MOD(g_pTriggerbot);
-		DELETE_MOD(g_pEsp);
-		DELETE_MOD(g_pRadar);
-		DELETE_MOD(g_pKnifebot);
-		DELETE_MOD(g_pSkin);
-		DELETE_MOD(g_pMisc);
-		DELETE_MOD(g_pInventoryChanger);
+	int Shutdown() {
+#if ENABLE_DEBUG_FILE == 1
+		CSX::Log::Add("[Client - shutting down!]");
+		CSX::Log::Add("[Client - g_pPlayers = %X]", g_pPlayers);
+		CSX::Log::Add("[Client - g_pRender = %X]", g_pRender);
+		CSX::Log::Add("[Client - g_pGui = %X]", g_pGui);
+		CSX::Log::Add("[Client - g_pAimbot = %X]", g_pAimbot);
+		CSX::Log::Add("[Client - g_pTriggerbot = %X]", g_pTriggerbot);
+		CSX::Log::Add("[Client - g_pEsp = %X]", g_pEsp);
+		CSX::Log::Add("[Client - g_pRadar = %X]", g_pRadar);
+		CSX::Log::Add("[Client - g_pKnifebot = %X]", g_pKnifebot);
+		CSX::Log::Add("[Client - g_pSkin = %X]", g_pSkin);
+		CSX::Log::Add("[Client - g_pMisc = %X]", g_pMisc);
+		CSX::Log::Add("[Client - g_pInventoryChanger = %X]", g_pInventoryChanger);
+#endif
+		//g_p with destructors ~()
+		DELETE_MOD(g_pPlayers); //no need for log
+		DELETE_MOD(g_pRender); //no need for log
+		DELETE_MOD(g_pGui); //no need for log
+		DELETE_MOD(g_pAimbot); //no need for log
+		DELETE_MOD(g_pTriggerbot); //no need for log
+		DELETE_MOD(g_pEsp); //no need for log
+
+		CSX::Log::Add("[Radar - shutting down]");
+		DELETE_MOD(g_pRadar); //only onrender
+		CSX::Log::Add("[Knifebot - shutting down]");
+		DELETE_MOD(g_pKnifebot); //only oncreatemove
+		CSX::Log::Add("[Skin - shutting down]");
+		DELETE_MOD(g_pSkin); //no need really but ill do it
+		CSX::Log::Add("[Misc - shutting down]");
+		DELETE_MOD(g_pMisc); //all from hooks
+		CSX::Log::Add("[InventoryChanger - shutting down]");
+		DELETE_MOD(g_pInventoryChanger); //all from hooks
+
+#if ENABLE_DEBUG_FILE == 1
+		CSX::Log::Add("\n[Client - shutdown!]");
+#endif
+		return true;
 	}
 
 	void OnRender()
@@ -381,6 +406,8 @@ namespace Client
 				if(Settings::Aimbot::aim_Backtrack)
 					backtracking->legitBackTrack(pCmd);
 
+				Settings::Misc::IsCreateMoveInit = true; //uwu
+
 				/*if(Settings::Misc::misc_LegitAA)
 					AntiAim().LegitAA(pCmd, bSendPacket);*/
 
@@ -483,10 +510,11 @@ namespace Client
 			g_pMisc->OnOverrideView(pSetup);
 	}
 
-	void OnGetViewModelFOV(float& fov)
-	{
-		if (g_pMisc)
+	//fuck this function
+	void OnGetViewModelFOV(float &fov) {
+		if(g_pMisc) {
 			g_pMisc->OnGetViewModelFOV(fov);
+		}
 	}
 
 	void DrawAimbot()

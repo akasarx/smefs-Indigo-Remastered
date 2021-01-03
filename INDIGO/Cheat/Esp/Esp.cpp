@@ -193,8 +193,33 @@ const char* hitgroup_to_name(int hitgroup)
 	}
 }
 
-CSoundEsp::CSoundEsp()
-{
+//Destructor - shutdown
+CSoundEsp::~CSoundEsp() {
+	//how the hell do i delete sound, nullptr don't work either :(
+	//delete Sound; //vector<Sound_s>
+
+	Sound.clear(); //should be cleared
+	Sound.~vector(); //call destructor to be sure
+
+	//from VS C++ <vector>
+	/*void clear() noexcept
+		{	// erase all
+		this->_Orphan_all();
+		_Destroy(this->_Myfirst(), this->_Mylast());
+		this->_Mylast() = this->_Myfirst();
+		}*/
+
+	//just in case
+	SoundColor.SetColor(255, 255, 255); //Color::White();
+
+	//delete
+	delete SoundColor; //Color
+#if ENABLE_DEBUG_FILE == 1
+	CSX::Log::Add("[SoundEsp - shutdown]\n");
+#endif
+}
+
+CSoundEsp::CSoundEsp() {
 	SoundColor = Color::White();
 }
 bool done = false;
@@ -336,6 +361,38 @@ void CEsp::NightMode()
 			done = false;
 		}
 	}
+}
+
+//destructor - shutdown
+CEsp::~CEsp() {
+	// Öâåòà õï áàðà //what the fuck is this everywhere??? Ay Oh Ay Oh?
+
+	//CSoundEsp - fuck sound, just die if you haven't already
+	SoundEsp.~CSoundEsp();
+
+	//all to Color::White() just incase
+	CT_HP_ColorM.SetColor(255, 255, 255); //fuck Color
+	TT_HP_ColorM.SetColor(255, 255, 255); //fuck Color
+
+	CT_AR_ColorM.SetColor(255, 255, 255); //fuck Color
+	TT_AR_ColorM.SetColor(255, 255, 255); //fuck Color
+
+	//DIE
+	delete CT_HP_ColorM;
+	delete TT_HP_ColorM;
+	delete CT_AR_ColorM;
+	delete TT_AR_ColorM;
+
+	visible_flat = nullptr; //IMaterial*
+	visible_tex = nullptr; //IMaterial*
+	hidden_flat = nullptr; //IMaterial*
+	hidden_tex = nullptr; //IMaterial*
+
+	fExplodeC4Timer = 0.f;
+	fC4Timer = 0.f;
+#if ENABLE_DEBUG_FILE == 1
+	CSX::Log::Add("[Esp - shutdown]\n");
+#endif
 }
 
 CEsp::CEsp()
@@ -1011,7 +1068,7 @@ void CEsp::OnDrawModelExecute(IMatRenderContext* ctx, const DrawModelState_t &st
 		InitalizeMaterial = true;
 		return;
 	}
-	string strModelName = Interfaces::ModelInfo()->GetModelName(pInfo.pModel);
+	string strModelName = Interfaces::ModelInfo()->GetModelName(pInfo.pModel); //Access Violation
 	if (strModelName.size() <= 1) {
 		return;
 	}

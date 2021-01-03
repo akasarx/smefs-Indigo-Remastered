@@ -22,13 +22,15 @@ LRESULT WINAPI GUI_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 CGui::CGui() {}
 
-CGui::~CGui()
-{
+CGui::~CGui() {
 	ImGui_ImplDX9_Shutdown();
+#if ENABLE_DEBUG_FILE == 1
+	CSX::Log::Add("[GUI - shutdown]\n");
+#endif
 }
 
-void CGui::GUI_Init(IDirect3DDevice9 * pDevice)
-{
+bool wndp; //wndproc
+void CGui::GUI_Init(IDirect3DDevice9 * pDevice) {
 	HWND hWindow = FindWindowA("Valve001", 0);
 
 	ImGui_ImplDX9_Init(hWindow, pDevice);
@@ -68,6 +70,13 @@ void CGui::GUI_Init(IDirect3DDevice9 * pDevice)
 	ImGui_ImplDX9_CreateDeviceObjects();
 
 	WndProc_o = (WNDPROC)SetWindowLongA(hWindow, GWL_WNDPROC, (LONG)(LONG_PTR)GUI_WndProc);
+	//WndProc hook
+#if ENABLE_DEBUG_FILE == 1
+	if(!wndp) {
+		CSX::Log::Add("[Hooked - WndProc]");
+		wndp = true;
+	}
+#endif
 
 	bIsGuiInitalize = true;
 }
@@ -82,45 +91,44 @@ void CGui::GUI_End_Render()
 	ImGui::Render();
 }
 
-LRESULT WINAPI GUI_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT WINAPI GUI_WndProc(HWND hwnd, UINT uMsg,
+	WPARAM wParam, LPARAM lParam) {
 	static bool is_down = false;
 	static bool is_clicked = false;
 	static bool check_closed = false;
 
-	if (GUI_KEY_DOWN(VK_INSERT))
-	{
+	if(GUI_KEY_DOWN(VK_INSERT)) { //if insert key is pressed
 		is_clicked = false;
-		is_down = true;
+		is_down = true; //insert pressed down
 	}
-	else if (!GUI_KEY_DOWN(VK_INSERT) && is_down)
-	{
-		is_clicked = true;
-		is_down = false;
+	else if(!GUI_KEY_DOWN(VK_INSERT) && is_down) {
+		is_clicked = true; //menu clicked
+		is_down = false; //insert not pressed down
 	}
-	else
-	{
-		is_clicked = false;
-		is_down = false;
+	else {
+		is_clicked = false; //nothing
+		is_down = false; //nothing
 	}
 
-	if (!bIsGuiVisible && !is_clicked && check_closed)
-	{
+	//if (nothing is happening)
+	if(!bIsGuiVisible && !is_clicked && check_closed) {
 		check_closed = false;
 	}
 
-	if (is_clicked)
-	{
+	//if menu clicked
+	if(is_clicked) {
 		bIsGuiVisible = !bIsGuiVisible;
 		Interfaces::InputSystem()->EnableInput(!bIsGuiVisible); //Cursor Fix
 
-		if (!check_closed)
+		if(!check_closed)
 			check_closed = true;
 	}
 
-	if (bIsGuiVisible && ImGui_ImplDX9_WndProcHandler(hwnd, uMsg, wParam, lParam))
+	//if menu, yes
+	if(bIsGuiVisible && ImGui_ImplDX9_WndProcHandler(hwnd, uMsg, wParam, lParam))
 		return true;
 
+	//ret ofunc
 	return CallWindowProcA(WndProc_o, hwnd, uMsg, wParam, lParam);
 }
 

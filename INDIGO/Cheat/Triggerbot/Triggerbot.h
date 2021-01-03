@@ -21,6 +21,7 @@ class CTriggerbot
 {
 public:
 
+	~CTriggerbot();
 	CTriggerbot();
 
 	//[swap_lines]

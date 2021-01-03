@@ -116,10 +116,9 @@ namespace SDK
 			VirtualFn( bool )( PVOID , float , CUserCmd* );
 			return GetMethod< OriginalFn >( this , TABLE::IClientMode::CreateMove )( this , flInputSampleTime , cmd );
 		}
-		float GetViewModelFOV()
-		{
-			VirtualFn( float )( PVOID );
-			return GetMethod< OriginalFn >( this , TABLE::IClientMode::GetViewModelFOV )( this );
+		float GetViewModelFOV() {
+			VirtualFn(float)(PVOID);
+			return GetMethod< OriginalFn >(this, TABLE::IClientMode::GetViewModelFOV)(this); //Fatal error if you fuck up hook
 		}
 		bool DoPostScreenSpaceEffects(int callback)
 		{

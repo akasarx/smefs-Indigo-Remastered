@@ -25,8 +25,11 @@ namespace CSX {
 		/* Get hwProfile GUID */
 		string GetHwProfileGUID();
 
-		/* Return False If Read Ptr Error */
-		bool IsBadReadPtr(PVOID pPointer);
+		/* VMT Return False If Read Ptr Error */
+		bool VMT_IsBadReadPtr(PVOID pPointer);
+
+		/* New Return False If Read Ptr Error */
+		bool New_IsBadReadPtr(std::uintptr_t* pPointer);
 
 		/* Unicode To Utf8 Convert */
 		BSTR ConvertStringToBSTR_UTF8(const char* szBuff);

@@ -277,6 +277,9 @@ namespace Settings
 		extern char* Second_static;
 
 		extern float hitmarkerAlpha;
+
+		//xD - stop race conditions with ONE SIMPLE TRICK!
+		extern bool IsCreateMoveInit;
 	}
 
 		namespace InvChanger

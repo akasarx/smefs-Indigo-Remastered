@@ -69,7 +69,7 @@ namespace Client
 	extern int			iWeaponSelectIndex;
 
 	bool Initialize( IDirect3DDevice9* pDevice );
-	void Shutdown();
+	int  Shutdown();
 	void SendMMHello();
 	void SendClientHello();
 
@@ -87,7 +87,7 @@ namespace Client
 	void OnPlaySound( const Vector* pOrigin , const char* pszSoundName );
 	void OnPlaySound( const char* pszSoundName );
 	void OnOverrideView( CViewSetup* pSetup );
-	void OnGetViewModelFOV( float& fov );
+	void OnGetViewModelFOV(float &fov);
 	void DrawAimbot();
 	void DrawTrigger();
 	void DrawVisuals();

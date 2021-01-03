@@ -140,9 +140,25 @@ namespace Engine {
 		}
 		return true;
 	}
-	void Shutdown() {
-		Hook::Shutdown();
-		Client::Shutdown();
+	
+	int Shutdown() {
+		if(!Hook::Shutdown() || !Client::Shutdown()) {
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Engine - failed to shutdown!]");
+#endif
+			return false;
+		}
+		else {
+#if ENABLE_DEBUG_FILE == 1
+			CSX::Log::Add("[Engine - shutdown!]");
+			//CTRL+C + CTRL+V GetModuleHandle("your_paste_here.dll");
+			HMODULE prochandle = GetModuleHandle("smef_indigo_compiled.dll");
+			CSX::Log::Add("[Module Handle (NULL) = %X", prochandle);
+			CSX::Log::Add("[Freeing library]");
+			FreeLibrary(prochandle); //exit thread closes csgo so nahh
+#endif
+			return true;
+		}
 	}
 	//[junk_disable /]
 	bool stub_68616b65;

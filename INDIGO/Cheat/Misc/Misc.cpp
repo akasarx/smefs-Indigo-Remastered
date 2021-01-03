@@ -265,21 +265,18 @@ void CMisc::OnOverrideView( CViewSetup * pSetup )
 	}
 }
 
-void CMisc::OnGetViewModelFOV(float& fov)
-{
-	if (Settings::Misc::misc_FovChanger && !Interfaces::Engine()->IsTakingScreenshot())
-	{
+void CMisc::OnGetViewModelFOV(float& fov) {
+	if(Settings::Misc::misc_FovChanger && !Interfaces::Engine()->IsTakingScreenshot()) {
 		CBaseEntity* pPlayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntity(Interfaces::Engine()->GetLocalPlayer());
 
-		if (!pPlayer)
+		if(!pPlayer)
 			return;
 
-		if (pPlayer->IsDead())
-		{
-			if (pPlayer->GetObserverMode() == ObserverMode_t::OBS_MODE_IN_EYE && pPlayer->GetObserverTarget())
+		if(pPlayer->IsDead()) {
+			if(pPlayer->GetObserverMode() == ObserverMode_t::OBS_MODE_IN_EYE && pPlayer->GetObserverTarget())
 				pPlayer = (CBaseEntity*)Interfaces::EntityList()->GetClientEntityFromHandle(pPlayer->GetObserverTarget());
 
-			if (!pPlayer)
+			if(!pPlayer)
 				return;
 		}
 

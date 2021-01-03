@@ -86,8 +86,8 @@ namespace CSX {
 			return hwProfileInfo.szHwProfileGuid;
 		}
 
-		/* Return False If Read Ptr Error */
-		bool IsBadReadPtr(PVOID pPointer) {
+		/* VMT Return False If Read Ptr Error */
+		bool VMT_IsBadReadPtr(PVOID pPointer) {
 			MEMORY_BASIC_INFORMATION mbi = { 0 };
 			if (VirtualQuery(pPointer, &mbi, sizeof(mbi))) {
 				DWORD mask = (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
@@ -95,6 +95,22 @@ namespace CSX {
 				bool ret = !(mbi.Protect & mask);
 
 				if (mbi.Protect & (PAGE_GUARD | PAGE_NOACCESS))
+					ret = true;
+
+				return ret;
+			}
+			return true;
+		}
+
+		/* New Return False If Read Ptr Error */
+		bool New_IsBadReadPtr(std::uintptr_t* pPointer) {
+			MEMORY_BASIC_INFORMATION mbi = { 0 };
+			if(VirtualQuery(pPointer, &mbi, sizeof(mbi))) {
+				std::size_t mask = (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
+
+				bool ret = !(mbi.Protect & mask);
+
+				if(mbi.Protect & (PAGE_GUARD | PAGE_NOACCESS))
 					ret = true;
 
 				return ret;
