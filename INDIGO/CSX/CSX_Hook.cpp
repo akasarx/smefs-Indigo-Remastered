@@ -4,31 +4,29 @@ namespace CSX
 {
 	namespace Hook
 	{
-		PVOID WriteVTable( PVOID pTablePtr , PVOID pFuncAddress , DWORD dwIndex )
-		{
-			if ( IsBadReadPtr( pTablePtr , sizeof( PVOID ) ) )
+		PVOID WriteVTable(PVOID pTablePtr, PVOID pFuncAddress, DWORD dwIndex) {
+			if(IsBadReadPtr(pTablePtr, sizeof(PVOID)))
 				return nullptr;
 
-			DWORD dwOffset = dwIndex * sizeof( PVOID );
-			
-			PVOID pFunc = (PVOID)( (DWORD)pTablePtr + dwOffset );
+			DWORD dwOffset = dwIndex * sizeof(PVOID);
+
+			PVOID pFunc = (PVOID)((DWORD)pTablePtr + dwOffset);
 			PVOID Func_o = (PVOID)*(PDWORD)pFunc;
 
-			if ( IsBadReadPtr( pFunc , sizeof( PVOID ) ) )
+			if(IsBadReadPtr(pFunc, sizeof(PVOID)))
 				return nullptr;
 
 			DWORD dwOld = 0;
-			VirtualProtect( pFunc , sizeof( PVOID ) , PAGE_READWRITE , &dwOld );
+			VirtualProtect(pFunc, sizeof(PVOID), PAGE_READWRITE, &dwOld);
 
 			*(PDWORD)pFunc = (DWORD)pFuncAddress;
 
-			VirtualProtect( pFunc , sizeof( PVOID ) , dwOld , &dwOld );
+			VirtualProtect(pFunc, sizeof(PVOID), dwOld, &dwOld);
 
 			return Func_o;
 		}
 
-		VTable::VTable()
-		{
+		VTable::VTable() {
 			pPtrPtrTable = nullptr;
 			pPtrOldTable = nullptr;
 			pPtrNewTable = nullptr;
