@@ -212,14 +212,14 @@ namespace Settings
 		extern int knf_DistAttack2;
 	}
 
-	namespace Skins {
+	namespace Skin {
 		//[swap_lines]
-		extern int knife_t_type;
-		extern int knife_t_skin;
-		extern int knife_ct_type;
-		extern int knife_ct_skin;
-		extern int glove_type;
-		extern int glove_skin;
+		extern int knf_ct_model;
+		extern int knf_ct_skin;
+		extern int knf_tt_model;
+		extern int knf_tt_skin;
+		extern int gloves_model;
+		extern int gloves_skin;
 		//[/swap_lines]
 	}
 

@@ -746,11 +746,10 @@ namespace Client
 
 		if(otherpages == 0) { //skins
 			const char* knife_models_items[] = {
-				"Default", "Bayonet", "Gold Knife", "Spectral Shiv", "CSS Knife",
-				"Flip Knife", "Gut Knife", "Karambit", "M9 Bayonet", "Huntsman Knife",
-				"Falchion Knife", "Bowie Knife", "Butterfly Knife", "Shadow Daggers",
-				"Survival Knife", "Ursus Knife", "Paracord Knife", "Navaja Knife",
-				"Nomad Knife", "Stiletto Knife", "Talon Knife", "Skeleton Knife"
+				"Default","Bayonet","Flip Knife","Gut Knife","Karambit" ,"M9 Bayonet",
+				"Huntsman Knife","Falchion Knife","Bowie Knife","Butterfly Knife","Shadow Daggers",
+				"Navaja Knife", "Stiletto Knife", "Ursus Knife", "Talon Knife", "CSS Knife",
+				"Nomad Knife", "Skeleton Knife", "Survival Knife", "Paracord Knife"
 			};
 			const char* quality_items[] =
 			{
@@ -771,11 +770,11 @@ namespace Client
 				"Default (Counter-Terrorists)",
 				"Sporty",
 				"Slick",
-				"Leather Handwrap",
+				"Handwrap",
 				"Motorcycle",
 				"Specialist",
 				"Hydra",
-				"Brokenfang" //uwu
+				"Brokenfang"
 			};
 
 			ImGui::Separator();
@@ -785,32 +784,29 @@ namespace Client
 			static int iSelectKnifeCTSkinIndex = -1;
 			static int iSelectKnifeTTSkinIndex = -1;
 
-			//model
-			int iKnifeCTModelIndex = Settings::Skins::knife_ct_type;
-			int iKnifeTTModelIndex = Settings::Skins::knife_t_type;
+			int iKnifeCTModelIndex = Settings::Skin::knf_ct_model;
+			int iKnifeTTModelIndex = Settings::Skin::knf_tt_model;
 
 			static int iOldKnifeCTModelIndex = -1;
 			static int iOldKnifeTTModelIndex = -1;
 
-			if(iOldKnifeCTModelIndex != iKnifeCTModelIndex && Settings::Skins::knife_ct_type) //model
-				iSelectKnifeCTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skins::knife_ct_skin, false);
+			if (iOldKnifeCTModelIndex != iKnifeCTModelIndex && Settings::Skin::knf_ct_model)
+				iSelectKnifeCTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skin::knf_ct_skin, false);
 
-			if(iOldKnifeTTModelIndex != iKnifeTTModelIndex && Settings::Skins::knife_t_type) //model
-				iSelectKnifeTTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skins::knife_ct_skin, true); //knife_t_skin
+			if (iOldKnifeTTModelIndex != iKnifeTTModelIndex && Settings::Skin::knf_tt_model)
+				iSelectKnifeTTSkinIndex = GetKnifeSkinIndexFromPaintKit(Settings::Skin::knf_ct_skin, true);
 
 			iOldKnifeCTModelIndex = iKnifeCTModelIndex;
 			iOldKnifeTTModelIndex = iKnifeTTModelIndex;
 
-			//model
-			string KnifeCTModel = knife_models_items[Settings::Skins::knife_ct_type];
-			string KnifeTTModel = knife_models_items[Settings::Skins::knife_t_type];
+			string KnifeCTModel = knife_models_items[Settings::Skin::knf_ct_model];
+			string KnifeTTModel = knife_models_items[Settings::Skin::knf_tt_model];
 
 			KnifeCTModel += " Skin##KCT";
 			KnifeTTModel += " Skin##KTT";
 
 			ImGui::PushItemWidth(362.f);
-			//model
-			ImGui::Combo("Knife CT Model", &Settings::Skins::knife_ct_type, knife_models_items, IM_ARRAYSIZE(knife_models_items));
+			ImGui::Combo("Knife CT Model", &Settings::Skin::knf_ct_model, knife_models_items, IM_ARRAYSIZE(knife_models_items));
 			ImGui::PushItemWidth(362.f);
 			ImGui::ComboBoxArray("Knife CT Skin", &iSelectKnifeCTSkinIndex, KnifeSkins[iKnifeCTModelIndex].SkinNames);
 			ImGui::PushItemWidth(362.f);
@@ -818,8 +814,7 @@ namespace Client
 			ImGui::Spacing();
 
 			ImGui::PushItemWidth(362.f);
-			//model
-			ImGui::Combo("Knife T Model", &Settings::Skins::knife_t_type, knife_models_items, IM_ARRAYSIZE(knife_models_items));
+			ImGui::Combo("Knife T Model", &Settings::Skin::knf_tt_model, knife_models_items, IM_ARRAYSIZE(knife_models_items));
 			ImGui::PushItemWidth(362.f);
 			ImGui::ComboBoxArray("Knife T Skin", &iSelectKnifeTTSkinIndex, KnifeSkins[iKnifeTTModelIndex].SkinNames);
 			ImGui::PushItemWidth(362.f);
@@ -857,30 +852,30 @@ namespace Client
 			ImGui::Separator();
 
 			ImGui::PushItemWidth(362.f);
-			ImGui::Combo("Gloves Type", &Settings::Skins::glove_type, GlovesType, IM_ARRAYSIZE(GlovesType));
+			ImGui::Combo("Gloves Type", &Settings::Skin::gloves_model, GlovesType, IM_ARRAYSIZE(GlovesType));
 			ImGui::PushItemWidth(362.f);
-			ImGui::ComboBoxArray("Gloves Skin", &Settings::Skins::glove_skin, GloveSkin[Settings::Skins::glove_type].Names); //glove_model
+			ImGui::ComboBoxArray("Gloves Skin", &Settings::Skin::gloves_skin, GloveSkin[Settings::Skin::gloves_model].Names);
 			ImGui::Separator();
 
 
 			if(ImGui::Button("Apply##Skin")) {
-				if(iWeaponSelectSkinIndex >= 0) {
+				if (iWeaponSelectSkinIndex >= 0) {
 					g_SkinChangerCfg[iWeaponSelectIndex].nFallbackPaintKit = WeaponSkins[iWeaponID].SkinPaintKit[iWeaponSelectSkinIndex];
 				}
-				//1 - model
-				if(iSelectKnifeCTSkinIndex >= 0 && Settings::Skins::knife_ct_type > 0) {
-					Settings::Skins::knife_ct_skin = KnifeSkins[iKnifeCTModelIndex].SkinPaintKit[iSelectKnifeCTSkinIndex];
+
+				if (iSelectKnifeCTSkinIndex >= 0 && Settings::Skin::knf_ct_model > 0) {
+					Settings::Skin::knf_ct_skin = KnifeSkins[iKnifeCTModelIndex].SkinPaintKit[iSelectKnifeCTSkinIndex];
 				}
 				else {
-					Settings::Skins::knife_ct_skin = 0;
+					Settings::Skin::knf_ct_skin = 0;
 					iSelectKnifeCTSkinIndex = -1;
 				}
-				//1 - model
-				if(iSelectKnifeTTSkinIndex >= 0 && Settings::Skins::knife_t_type > 0) {
-					Settings::Skins::knife_t_skin = KnifeSkins[iKnifeTTModelIndex].SkinPaintKit[iSelectKnifeTTSkinIndex];
+
+				if (iSelectKnifeTTSkinIndex >= 0 && Settings::Skin::knf_tt_model > 0) {
+					Settings::Skin::knf_tt_skin = KnifeSkins[iKnifeTTModelIndex].SkinPaintKit[iSelectKnifeTTSkinIndex];
 				}
 				else {
-					Settings::Skins::knife_t_skin = 0;
+					Settings::Skin::knf_tt_skin = 0;
 					iSelectKnifeTTSkinIndex = -1;
 				}
 				ForceFullUpdate();
@@ -921,63 +916,62 @@ namespace Client
 				static float wear = 0.f;
 				const char* raritynames[] = { "Default (Gray)", "Consumer Grade (White)", "Industrial Grade (Light Blue)", "Mil-Spec (Darker Blue)", "Restricted (Purple)", "Classified (Pinkish Purple)", "Covert (Red)", "Exceedingly Rare (Gold)" };
 
+				//needs to be in order of weapon id
 				const char* itemnames[] = {
-					//guns
+					//guns (34)
 					"Desert Eagle", "Dual Berettas", "Five-Seven",
-					"Glock-18", "AK-47", "AUG", "AWP", "FAMAS", "G3SG1", "Galil AR", "M249",
-					"M4A1", "MAC-10", "P90", "MP5-SD" "UMP-45", "XM1014", "PP-Bizon", "MAG-7",
-					"Negev", "Sawed-Off", "Tec-9", "P2000", "MP7", "MP9", "Nova", "P250",
-					"SCAR-20", "SG 556", "SSG 08",
+					"Glock-18", "AK-47", "AUG", "AWP", "FAMAS", "G3SG1", "Galil AR", "M249", "M4A1", "MAC-10", "P90", "MP5-SD", "UMP-45", "XM1014", "PP-Bizon", "MAG-7", "Negev", "Sawed-Off", "Tec-9", "P2000", "MP7", "MP9", "Nova", "P250",
+					"SCAR-20", "SG 553", "SSG 08", "M4A1-S", "USP-S",
+					"CZ75-Auto", "R8 Revolver",
 
-					//knives1
-					"Gold Knife", "Default (CT) Knife", "Default (T) Knife",
+					//knives (19)
+					"Bayonet", "CSS Knife","Flip Knife", "Gut Knife", "Karambit", "M9 Bayonet", "Huntsman Knife", "Falchion Knife", "Bowie Knife", "Butterfly Knife",
+					"Shadow Daggers", "Paracord Knife", "Survival Knife",
+					"Ursus Knife", "Navaja Knife", "Nomad Knife",
+					"Stiletto Knife", "Talon Knife", "Skeleton Knife",
 
-					//guns2
-					"M4A1-S", "USP-S", "CZ75-Auto", "R8 Revolver",
+					//gloves (8)
+					"Brokenfang Gloves", "Bloodhound Gloves", "Sporty Gloves", "Slick Gloves", "Hand Wraps", "Motorcycle Gloves", "Specialist Gloves", "Hydra Gloves"
+				};
 
-					//knives2
-					"Spectral Shiv", "Bayonet", "CSS Knife", "Flip Knife", "Gut Knife",
-					"Karambit", "M9 Bayonet", "Huntsman Knife", "Falchion Knife", "Bowie Knife",
-					"Butterfly Knife", "Shadow Daggers", "Paracord Knife", "Survival Knife",
-					"Ursus Knife", "Navaja Knife", "Nomad Knife", "Stiletto Knife", "Talon Knife",
-					"Skeleton Knife",
-
-					//gloves
-					"Bloodhound Gloves", "Default (T) Gloves", "Default (CT) Gloves",
-					"Sporty Gloves", "Slick Gloves", "Leather Handwrap Gloves",
-					"Motorcycle Gloves", "Specialist Gloves", "Hydra Gloves",
-					"Brokenfang Gloves" }; //uwu
-
-				const int weapons_id[] = { WEAPON_DEAGLE, WEAPON_ELITE, /*Dual Berettas*/
+				//needs to be in order of weapon id
+				const int weapons_id[] = {
+					//guns (34)
+					WEAPON_DEAGLE, WEAPON_ELITE,/*Dual Berettas*/
 					WEAPON_FIVESEVEN, WEAPON_GLOCK, WEAPON_AK47, WEAPON_AUG,
-					WEAPON_AWP, WEAPON_FAMAS, WEAPON_G3SG1, WEAPON_GALILAR, WEAPON_M249,
-					WEAPON_M4A1, WEAPON_MAC10, WEAPON_P90, WEAPON_MP5SD, WEAPON_UMP45,
-					WEAPON_XM1014, WEAPON_BIZON, WEAPON_MAG7, WEAPON_NEGEV,
-					WEAPON_SAWEDOFF, WEAPON_TEC9, WEAPON_HKP2000, WEAPON_MP7,
-					WEAPON_MP9, WEAPON_NOVA, WEAPON_P250, WEAPON_SCAR20,
-					WEAPON_SG556, WEAPON_SSG08, WEAPON_KNIFEGG, WEAPON_KNIFE,
-					WEAPON_KNIFE_T, WEAPON_M4A1_SILENCER, WEAPON_USP_SILENCER,
-					WEAPON_CZ75A, WEAPON_REVOLVER, WEAPON_KNIFE_GHOST, /*Spectral Shiv*/
-					WEAPON_BAYONET, WEAPON_KNIFE_CSS, WEAPON_KNIFE_FLIP, WEAPON_KNIFE_GUT,
-					WEAPON_KNIFE_KARAMBIT, WEAPON_KNIFE_M9_BAYONET, WEAPON_KNIFE_TACTICAL, /*Huntsman Knife*/
-					WEAPON_KNIFE_FALCHION, WEAPON_KNIFE_SURVIVAL_BOWIE, WEAPON_KNIFE_BUTTERFLY,
-					WEAPON_KNIFE_PUSH, /*Shadow Daggers*/ WEAPON_KNIFE_CORD, /*Paracord Knife*/
-					WEAPON_KNIFE_CANIS, /*Survival Knife*/ WEAPON_KNIFE_URSUS,
-					WEAPON_KNIFE_GYPSY_JACKKNIFE, WEAPON_KNIFE_OUTDOOR, /*Nomad Knife*/
-					WEAPON_KNIFE_STILETTO, WEAPON_KNIFE_WIDOWMAKER, WEAPON_KNIFE_SKELETON,
-					STUDDED_BLOODHOUND_GLOVES, T_GLOVES, /*Default (T) Gloves*/
-					CT_GLOVES, /*Default (CT) Gloves*/ SPORTY_GLOVES, SLICK_GLOVES, LEATHER_HANDWRAPS,
-					MOTORCYCLE_GLOVES, SPECIALIST_GLOVES, STUDDED_HYDRA_GLOVES, STUDDED_BROKENFANG_GLOVES, //uwu
+					WEAPON_AWP, WEAPON_FAMAS, WEAPON_G3SG1, WEAPON_GALILAR, WEAPON_M249, WEAPON_M4A1, WEAPON_MAC10, WEAPON_P90, WEAPON_MP5SD, WEAPON_UMP45, WEAPON_XM1014, WEAPON_BIZON, WEAPON_MAG7, WEAPON_NEGEV, WEAPON_SAWEDOFF, WEAPON_TEC9, WEAPON_HKP2000, WEAPON_MP7, WEAPON_MP9, WEAPON_NOVA, WEAPON_P250, WEAPON_SCAR20, WEAPON_SG556, WEAPON_SSG08, WEAPON_M4A1_SILENCER, WEAPON_USP_SILENCER,
+					WEAPON_CZ75A, WEAPON_REVOLVER,
+
+					//knives (19)
+					WEAPON_BAYONET, WEAPON_KNIFE_CSS, WEAPON_KNIFE_FLIP, WEAPON_KNIFE_GUT, WEAPON_KNIFE_KARAMBIT,
+					WEAPON_KNIFE_M9_BAYONET,
+					WEAPON_KNIFE_TACTICAL,/*Huntsman Knife*/ WEAPON_KNIFE_FALCHION, WEAPON_KNIFE_SURVIVAL_BOWIE, WEAPON_KNIFE_BUTTERFLY,
+					WEAPON_KNIFE_PUSH,/*Shadow Daggers*/
+					WEAPON_KNIFE_CORD,/*Paracord Knife*/
+					WEAPON_KNIFE_CANIS,/*Survival Knife*/
+					WEAPON_KNIFE_URSUS,
+					WEAPON_KNIFE_GYPSY_JACKKNIFE,/*Navaja Knife*/
+					WEAPON_KNIFE_OUTDOOR,/*Nomad Knife*/
+					WEAPON_KNIFE_STILETTO,
+					WEAPON_KNIFE_WIDOWMAKER,/*Talon Knife*/
+					WEAPON_KNIFE_SKELETON,
+
+					//gloves (8)
+					4725,/*Brokenfang Gloves*/ 5027,/*Bloodhound Gloves*/
+					5030,/*Sporty Gloves*/ 5031,/*Slick Gloves*/
+					5032,/*Hand Wraps*/ 5033,/*Moto Gloves*/
+					5034,/*Specalist Gloves*/ 5035/*Hydra Gloves*/
 				};
 				ImGui::Combo(("Item"), &itemidtmp, itemnames, ARRAYSIZE(itemnames));
 				itemDefinitionIndex = weapons_id[itemidtmp];
 
-				if (itemDefinitionIndex < 5000) {
-					ImGui::ComboBoxArray("Skin", &paintkit_temp_skin, KnifeSkins[0].SkinNames);
+				//30th Jan 2020
+				if (itemDefinitionIndex < 600) { //id less than 600
+					ImGui::ComboBoxArray("Skin", &paintkit_temp_skin, KnifeSkins[0].SkinNames); //knives
 					paintKit = WeaponSkins[0].SkinPaintKit[paintkit_temp_skin];
 				}
-				else {
-					ImGui::ComboBoxArray("Skin", &paintkit_temp_gloves, GloveSkin[0].Names);
+				else if (itemDefinitionIndex > 4000) { //id more than 4000
+					ImGui::ComboBoxArray("Skin", &paintkit_temp_gloves, GloveSkin[0].Names); //gloves
 					paintKit = GloveSkin[0].PaintKit[paintkit_temp_gloves];
 				}
 
