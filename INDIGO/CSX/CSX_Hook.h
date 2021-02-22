@@ -36,7 +36,7 @@ namespace detail {
 /*#if ENABLE_DEBUG_FILE == 1 
 				CSX::Log::Add("\n[CSX::Hook - protect_guard failed to protect region.]\n");
 #endif*/
-				throw std::runtime_error("Failed to protect region.");
+				//throw std::runtime_error("Failed to protect region.");
 			}
 		}
 		~protect_guard() {
