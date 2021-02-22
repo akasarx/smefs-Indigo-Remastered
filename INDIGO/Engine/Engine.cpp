@@ -167,7 +167,7 @@ namespace Engine {
 		switch(iItemDefinitionIndex) {
 		case WEAPON_DEAGLE:
 			return WEAPON_TYPE_PISTOL;
-		case WEAPON_ELITE: //Dual Barettas
+		case WEAPON_ELITE: //Dual Berettas
 			return WEAPON_TYPE_PISTOL;
 		case WEAPON_FIVESEVEN:
 			return WEAPON_TYPE_PISTOL;
